@@ -167,175 +167,188 @@
   </div>
 
   <script>
-    const players = [];
-    const events = [];
-    const completedEvents = []; // Array of { eventName, results: [{ name, score, rank, medal, points }] }
+  const players = [];
+  const events = [];
+  const completedEvents = [];
 
-    function addPlayer() {
-      const input = document.getElementById('player-input');
-      const name = input.value.trim();
-      if (name && !players.includes(name)) {
-        players.push(name);
-        input.value = '';
-        renderSetupUI();
-      }
+  function addPlayer() {
+    const input = document.getElementById('player-input');
+    const name = input.value.trim();
+    if (name && !players.includes(name)) {
+      players.push(name);
+      input.value = '';
+      renderSetupUI();
+    }
+  }
+
+  function addEvent() {
+    const input = document.getElementById('event-input');
+    const name = input.value.trim();
+    if (name && !events.includes(name)) {
+      events.push(name);
+      input.value = '';
+      renderSetupUI();
+    }
+  }
+
+  function renderSetupUI() {
+    document.getElementById('player-tags').innerHTML = players.map(p => `<span class="tag">${p}</span>`).join('');
+    document.getElementById('event-tags').innerHTML = events.map(e => `<span class="tag">${e}</span>`).join('');
+    
+    const select = document.getElementById('event-select');
+    select.innerHTML = '<option value="">-- Choose Event --</option>' + 
+      events.map(e => `<option value="${e}">${e}</option>`).join('');
+    renderScoreInputs();
+  }
+
+  function renderScoreInputs() {
+    const selectedEvent = document.getElementById('event-select').value;
+    const container = document.getElementById('score-inputs');
+    const submitBtn = document.getElementById('submit-scores-btn');
+    const scoringTypeContainer = document.getElementById('scoring-type-container');
+
+    if (!selectedEvent || players.length === 0) {
+      container.innerHTML = '';
+      submitBtn.style.display = 'none';
+      scoringTypeContainer.style.display = 'none';
+      return;
     }
 
-    function addEvent() {
-      const input = document.getElementById('event-input');
-      const name = input.value.trim();
-      if (name && !events.includes(name)) {
-        events.push(name);
-        input.value = '';
-        renderSetupUI();
+    scoringTypeContainer.style.display = 'block';
+    submitBtn.style.display = 'block';
+
+    container.innerHTML = players.map(player => `
+      <div class="score-input-card">
+        <label>${player}</label>
+        <input type="number" step="any" data-player="${player}" class="player-score-field" placeholder="Enter score">
+      </div>
+    `).join('');
+  }
+
+  function submitEventScores() {
+    const eventName = document.getElementById('event-select').value;
+    const isHighWins = document.getElementById('score-type').value === 'high';
+    const scoreInputs = document.querySelectorAll('.player-score-field');
+    
+    const eventScores = [];
+    scoreInputs.forEach(input => {
+      const value = parseFloat(input.value);
+      if (!isNaN(value)) {
+        eventScores.push({ name: input.dataset.player, score: value });
       }
+    });
+
+    if (eventScores.length === 0) {
+      alert('Please enter scores for at least one athlete.');
+      return;
     }
 
-    function renderSetupUI() {
-      document.getElementById('player-tags').innerHTML = players.map(p => `<span class="tag">${p}</span>`).join('');
-      document.getElementById('event-tags').innerHTML = events.map(e => `<span class="tag">${e}</span>`).join('');
+    // Sort scores based on criteria
+    eventScores.sort((a, b) => isHighWins ? b.score - a.score : a.score - b.score);
+
+    // Points distribution schedule
+    const pointsMap = { 
+      1: 25, 
+      2: 20, 
+      3: 15, 
+      4: 12, 
+      5: 10, 
+      6: 8, 
+      7: 6, 
+      8: 4, 
+      9: 3, 
+      10: 2 
+    };
+    const medalsMap = { 1: '🥇', 2: '🥈', 3: '🥉' };
+
+    const processedResults = eventScores.map((entry, index) => {
+      const rank = index + 1;
+      // Assign points from map, or fallback to 1 pt for rank 11+
+      const points = pointsMap[rank] !== undefined ? pointsMap[rank] : 1;
       
-      const select = document.getElementById('event-select');
-      select.innerHTML = '<option value="">-- Choose Event --</option>' + 
-        events.map(e => `<option value="${e}">${e}</option>`).join('');
-      renderScoreInputs();
-    }
+      return {
+        ...entry,
+        rank,
+        medal: medalsMap[rank] || '',
+        points
+      };
+    });
 
-    function renderScoreInputs() {
-      const selectedEvent = document.getElementById('event-select').value;
-      const container = document.getElementById('score-inputs');
-      const submitBtn = document.getElementById('submit-scores-btn');
-      const scoringTypeContainer = document.getElementById('scoring-type-container');
+    completedEvents.push({
+      eventName,
+      results: processedResults
+    });
 
-      if (!selectedEvent || players.length === 0) {
-        container.innerHTML = '';
-        submitBtn.style.display = 'none';
-        scoringTypeContainer.style.display = 'none';
-        return;
-      }
+    updateLeaderboard();
+    renderCompletedEvents();
+    
+    // Reset form
+    document.getElementById('event-select').value = '';
+    renderScoreInputs();
+  }
 
-      scoringTypeContainer.style.display = 'block';
-      submitBtn.style.display = 'block';
+  function updateLeaderboard() {
+    const standings = {};
+    players.forEach(p => {
+      standings[p] = { points: 0, gold: 0, silver: 0, bronze: 0 };
+    });
 
-      container.innerHTML = players.map(player => `
-        <div class="score-input-card">
-          <label>${player}</label>
-          <input type="number" step="any" data-player="${player}" class="player-score-field" placeholder="Enter score">
-        </div>
-      `).join('');
-    }
-
-    function submitEventScores() {
-      const eventName = document.getElementById('event-select').value;
-      const isHighWins = document.getElementById('score-type').value === 'high';
-      const scoreInputs = document.querySelectorAll('.player-score-field');
-      
-      const eventScores = [];
-      scoreInputs.forEach(input => {
-        const value = parseFloat(input.value);
-        if (!isNaN(value)) {
-          eventScores.push({ name: input.dataset.player, score: value });
+    completedEvents.forEach(evt => {
+      evt.results.forEach(res => {
+        if (!standings[res.name]) {
+          standings[res.name] = { points: 0, gold: 0, silver: 0, bronze: 0 };
         }
+        standings[res.name].points += res.points;
+        if (res.rank === 1) standings[res.name].gold++;
+        if (res.rank === 2) standings[res.name].silver++;
+        if (res.rank === 3) standings[res.name].bronze++;
       });
+    });
 
-      if (eventScores.length === 0) {
-        alert('Please enter scores for at least one athlete.');
-        return;
-      }
+    // Sort by Total Points, then Golds, Silvers, Bronzes
+    const sorted = Object.keys(standings).map(name => ({
+      name,
+      ...standings[name]
+    })).sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.gold !== a.gold) return b.gold - a.gold;
+      if (b.silver !== a.silver) return b.silver - a.silver;
+      return b.bronze - a.bronze;
+    });
 
-      // Sort scores based on criteria
-      eventScores.sort((a, b) => isHighWins ? b.score - a.score : a.score - b.score);
+    const tbody = document.getElementById('leaderboard-body');
+    tbody.innerHTML = sorted.map((player, idx) => `
+      <tr>
+        <td><strong>#${idx + 1}</strong></td>
+        <td>${player.name}</td>
+        <td><strong>${player.points}</strong></td>
+        <td>${player.gold}</td>
+        <td>${player.silver}</td>
+        <td>${player.bronze}</td>
+      </tr>
+    `).join('');
+  }
 
-      // Assign ranks, medals, and points
-      // Gold = 5, Silver = 3, Bronze = 1
-      const pointsMap = { 1: 5, 2: 3, 3: 1 };
-      const medalsMap = { 1: '🥇', 2: '🥈', 3: '🥉' };
-
-      const processedResults = eventScores.map((entry, index) => {
-        const rank = index + 1;
-        return {
-          ...entry,
-          rank,
-          medal: medalsMap[rank] || '',
-          points: pointsMap[rank] || 0
-        };
-      });
-
-      completedEvents.push({
-        eventName,
-        results: processedResults
-      });
-
-      updateLeaderboard();
-      renderCompletedEvents();
-      
-      // Reset form
-      document.getElementById('event-select').value = '';
-      renderScoreInputs();
+  function renderCompletedEvents() {
+    const container = document.getElementById('completed-events-list');
+    if (completedEvents.length === 0) {
+      container.innerHTML = '<p style="color: var(--text-muted);">No completed events yet.</p>';
+      return;
     }
 
-    function updateLeaderboard() {
-      const standings = {};
-      players.forEach(p => {
-        standings[p] = { points: 0, gold: 0, silver: 0, bronze: 0 };
-      });
-
-      completedEvents.forEach(evt => {
-        evt.results.forEach(res => {
-          if (!standings[res.name]) {
-            standings[res.name] = { points: 0, gold: 0, silver: 0, bronze: 0 };
-          }
-          standings[res.name].points += res.points;
-          if (res.rank === 1) standings[res.name].gold++;
-          if (res.rank === 2) standings[res.name].silver++;
-          if (res.rank === 3) standings[res.name].bronze++;
-        });
-      });
-
-      // Convert to sorted array (Sort by Points, then Golds, then Silvers, then Bronzes)
-      const sorted = Object.keys(standings).map(name => ({
-        name,
-        ...standings[name]
-      })).sort((a, b) => {
-        if (b.points !== a.points) return b.points - a.points;
-        if (b.gold !== a.gold) return b.gold - a.gold;
-        if (b.silver !== a.silver) return b.silver - a.silver;
-        return b.bronze - a.bronze;
-      });
-
-      const tbody = document.getElementById('leaderboard-body');
-      tbody.innerHTML = sorted.map((player, idx) => `
-        <tr>
-          <td><strong>#${idx + 1}</strong></td>
-          <td>${player.name}</td>
-          <td><strong>${player.points}</strong></td>
-          <td>${player.gold}</td>
-          <td>${player.silver}</td>
-          <td>${player.bronze}</td>
-        </tr>
-      `).join('');
-    }
-
-    function renderCompletedEvents() {
-      const container = document.getElementById('completed-events-list');
-      if (completedEvents.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-muted);">No completed events yet.</p>';
-        return;
-      }
-
-      container.innerHTML = completedEvents.map(evt => `
-        <div style="margin-bottom: 1rem; border-bottom: 1px solid #334155; padding-bottom: 0.5rem;">
-          <h3 style="color: var(--accent);">${evt.eventName}</h3>
-          <ul>
-            ${evt.results.map(r => `
-              <li style="list-style: none; margin-bottom: 0.25rem;">
-                ${r.medal ? r.medal : '•'} <strong>${r.name}</strong> - Score: ${r.score} (${r.points} pts)
-              </li>
-            `).join('')}
-          </ul>
-        </div>
-      `).join('');
-    }
-  </script>
+    container.innerHTML = completedEvents.map(evt => `
+      <div style="margin-bottom: 1rem; border-bottom: 1px solid #334155; padding-bottom: 0.5rem;">
+        <h3 style="color: var(--accent);">${evt.eventName}</h3>
+        <ul>
+          ${evt.results.map(r => `
+            <li style="list-style: none; margin-bottom: 0.25rem;">
+              ${r.medal ? r.medal : '•'} <strong>${r.name}</strong> - Score: ${r.score} (${r.points} pts)
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `).join('');
+  }
+</script>
 </body>
 </html>
