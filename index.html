@@ -12,8 +12,11 @@
       --bg: #0f172a;
       --card-bg: #1e293b;
       --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --success: #22c55e;
       --text: #f8fafc;
       --text-muted: #94a3b8;
+      --border: #334155;
     }
 
     * {
@@ -64,7 +67,7 @@
       width: 100%;
       padding: 0.75rem;
       border-radius: 6px;
-      border: 1px solid #334155;
+      border: 1px solid var(--border);
       background: #0f172a;
       color: var(--text);
       font-size: 1rem;
@@ -112,7 +115,7 @@
     th, td {
       padding: 0.75rem;
       text-align: left;
-      border-bottom: 1px solid #334155;
+      border-bottom: 1px solid var(--border);
     }
 
     th {
@@ -138,8 +141,97 @@
       background: #0f172a;
       padding: 0.75rem;
       border-radius: 6px;
-      border: 1px solid #334155;
+      border: 1px solid var(--border);
       margin-bottom: 1rem;
+    }
+
+    /* Embedded Switch Styles */
+    .mode-selection {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 0.75rem;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .mode-btn.active {
+      background: var(--accent);
+      color: #0f172a;
+      border-color: var(--accent);
+    }
+
+    .match-card {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .match-card.completed {
+      border-color: var(--success);
+      opacity: 0.9;
+    }
+
+    .team-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      background: #1e293b;
+      border-radius: 4px;
+    }
+
+    .score-input {
+      width: 60px !important;
+      padding: 0.4rem !important;
+      text-align: center;
+    }
+
+    .vs {
+      color: var(--accent);
+      font-weight: bold;
+      margin: 0.25rem 0;
+    }
+
+    .action-btn {
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+
+    .submit-btn {
+      background: var(--success);
+      color: white;
+    }
+
+    .submit-btn:hover {
+      background: #16a34a;
+    }
+
+    .save-score-btn {
+      background: #334155;
+      color: white;
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .save-score-btn:hover {
+      background: var(--accent);
+      color: #0f172a;
     }
   </style>
 </head>
@@ -147,7 +239,7 @@
 
   <h1>🏆 Hellcastle Olympic Games Tracker</h1>
 
-  <!-- Setup Section -->
+  <!-- 1. Tournament Setup -->
   <div class="card">
     <h2>1. Tournament Setup</h2>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
@@ -155,7 +247,7 @@
         <div class="form-group">
           <label for="player-input">Add Athlete / Player Name</label>
           <div class="btn-group">
-            <input type="text" id="player-input" placeholder="e.g. John Doe">
+            <input type="text" id="player-input" placeholder="e.g. John Doe" onkeydown="if(event.key==='Enter') addPlayer()">
             <button onclick="addPlayer()">Add</button>
           </div>
         </div>
@@ -165,7 +257,7 @@
         <div class="form-group">
           <label for="event-input">Add Event Name</label>
           <div class="btn-group">
-            <input type="text" id="event-input" placeholder="e.g. 100m Dash">
+            <input type="text" id="event-input" placeholder="e.g. 100m Dash" onkeydown="if(event.key==='Enter') addEvent()">
             <button onclick="addEvent()">Add</button>
           </div>
         </div>
@@ -174,7 +266,7 @@
     </div>
   </div>
 
-  <!-- Score Entry Section -->
+  <!-- 2. Score Entry Section -->
   <div class="card">
     <h2>2. Enter Event Results</h2>
     
@@ -193,12 +285,47 @@
       </label>
     </div>
 
-    <!-- Switch Winner Dropdown -->
-    <div class="form-group" id="switch-winner-container" style="display: none;">
-      <label for="switch-winner-select">Select Switch Winner</label>
-      <select id="switch-winner-select">
-        <option value="">-- Choose Winner --</option>
-      </select>
+    <!-- Embedded Switch Engine Panel -->
+    <div id="switch-engine-container" style="display: none; background: #0f172a; padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1rem;">
+      <h3>🎮 Switch Tournament Config</h3>
+      
+      <div id="switch-setup-panel">
+        <div class="mode-selection">
+          <button class="mode-btn active" id="singles-btn" onclick="setSwitchMode('singles')">Singles (1v1)</button>
+          <button class="mode-btn" id="doubles-btn" onclick="setSwitchMode('doubles')">Doubles (2v2)</button>
+        </div>
+        
+        <div class="form-group">
+          <label for="rounds-select">Rounds to Play:</label>
+          <select id="rounds-select"></select>
+        </div>
+
+        <button class="action-btn" onclick="startSwitchEvent()">Start Switch Event</button>
+      </div>
+
+      <!-- Active Switch Tournament View -->
+      <div id="switch-active-panel" style="display: none;">
+        <h4 id="switch-round-header" style="color: var(--accent); margin-bottom: 1rem;">Round 1 Matchups</h4>
+        
+        <div id="switch-match-list"></div>
+        
+        <button class="action-btn submit-btn" id="switch-next-round-btn" onclick="handleSwitchNextRound()" style="display: none;">Generate Next Round</button>
+        
+        <div style="margin-top: 1.5rem;">
+          <h4>Current Switch Standings</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Wins</th>
+                <th>Points</th>
+              </tr>
+            </thead>
+            <tbody id="switch-leaderboard-body"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- Standard Scoring Rule -->
@@ -252,6 +379,24 @@
     const events = [];
     const completedEvents = [];
 
+    // Switch Tournament State Variables
+    let switchMode = 'singles';
+    let switchMatchHistory = new Set();
+    let switchMatches = [];
+    let switchCurrentRound = 1;
+    let switchTotalRounds = 5;
+    let switchStats = {};
+
+    // Initialize Switch Rounds Dropdown Options
+    const roundsSelect = document.getElementById('rounds-select');
+    for (let i = 1; i <= 20; i++) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = i;
+      if (i === 5) opt.selected = true;
+      roundsSelect.appendChild(opt);
+    }
+
     function addPlayer() {
       const input = document.getElementById('player-input');
       const name = input.value.trim();
@@ -288,11 +433,10 @@
       const submitBtn = document.getElementById('submit-scores-btn');
       const scoringTypeContainer = document.getElementById('scoring-type-container');
       const switchContainer = document.getElementById('switch-container');
-      const switchWinnerContainer = document.getElementById('switch-winner-container');
+      const switchEngineContainer = document.getElementById('switch-engine-container');
 
-      // Reset Switch selection state
       document.getElementById('is-switch-game').checked = false;
-      switchWinnerContainer.style.display = 'none';
+      switchEngineContainer.style.display = 'none';
 
       if (!selectedEvent || players.length === 0) {
         container.innerHTML = '';
@@ -307,84 +451,261 @@
       submitBtn.style.display = 'block';
       container.style.display = 'grid';
 
-      // Standard numeric score fields
       container.innerHTML = players.map(player => `
         <div class="score-input-card">
           <label>${player}</label>
           <input type="number" step="any" data-player="${player}" class="player-score-field" placeholder="Enter score">
         </div>
       `).join('');
-
-      // Populate Switch Winner Dropdown
-      const winnerSelect = document.getElementById('switch-winner-select');
-      winnerSelect.innerHTML = '<option value="">-- Choose Winner --</option>' + 
-        players.map(p => `<option value="${p}">${p}</option>`).join('');
     }
 
     function toggleSwitchMode() {
       const isSwitch = document.getElementById('is-switch-game').checked;
       const scoreInputs = document.getElementById('score-inputs');
       const scoringTypeContainer = document.getElementById('scoring-type-container');
-      const switchWinnerContainer = document.getElementById('switch-winner-container');
+      const switchEngineContainer = document.getElementById('switch-engine-container');
+      const submitBtn = document.getElementById('submit-scores-btn');
 
       if (isSwitch) {
         scoreInputs.style.display = 'none';
         scoringTypeContainer.style.display = 'none';
-        switchWinnerContainer.style.display = 'block';
+        submitBtn.style.display = 'none';
+        switchEngineContainer.style.display = 'block';
+        
+        // Reset switch panel views
+        document.getElementById('switch-setup-panel').style.display = 'block';
+        document.getElementById('switch-active-panel').style.display = 'none';
       } else {
         scoreInputs.style.display = 'grid';
         scoringTypeContainer.style.display = 'block';
-        switchWinnerContainer.style.display = 'none';
+        submitBtn.style.display = 'block';
+        switchEngineContainer.style.display = 'none';
       }
     }
 
-    function submitEventScores() {
-      const eventName = document.getElementById('event-select').value;
-      const isSwitch = document.getElementById('is-switch-game').checked;
-      let eventScores = [];
+    /* Embedded Switch Engine Functions */
+    function setSwitchMode(selectedMode) {
+      switchMode = selectedMode;
+      document.getElementById('singles-btn').classList.toggle('active', switchMode === 'singles');
+      document.getElementById('doubles-btn').classList.toggle('active', switchMode === 'doubles');
+    }
 
-      if (isSwitch) {
-        const winner = document.getElementById('switch-winner-select').value;
-        if (!winner) {
-          alert('Please select the Switch winner.');
-          return;
-        }
+    function shuffle(array) {
+      return [...array].sort(() => Math.random() - 0.5);
+    }
 
-        // Winner gets 1st place, remaining players get unranked entry
-        eventScores.push({ name: winner, score: 'Switch Winner' });
-        players.forEach(p => {
-          if (p !== winner) {
-            eventScores.push({ name: p, score: 'Participant' });
-          }
-        });
-      } else {
-        const isHighWins = document.getElementById('score-type').value === 'high';
-        const scoreInputs = document.querySelectorAll('.player-score-field');
+    function getMatchKey(teamA, teamB) {
+      const a = [...teamA].sort().join('&');
+      const b = [...teamB].sort().join('&');
+      return [a, b].sort().join(' VS ');
+    }
 
-        scoreInputs.forEach(input => {
-          const value = parseFloat(input.value);
-          if (!isNaN(value)) {
-            eventScores.push({ name: input.dataset.player, score: value });
-          }
-        });
+    function resetSwitchStats() {
+      switchMatchHistory.clear();
+      switchCurrentRound = 1;
+      switchStats = {};
+      players.forEach(p => { switchStats[p] = { wins: 0, points: 0 }; });
+    }
 
-        if (eventScores.length === 0) {
-          alert('Please enter scores for at least one athlete.');
-          return;
-        }
+    function startSwitchEvent() {
+      const minPlayers = switchMode === 'singles' ? 2 : 4;
+      if (players.length < minPlayers) {
+        alert(`You need at least ${minPlayers} players to run a ${switchMode} Switch tournament.`);
+        return;
+      }
+      switchTotalRounds = parseInt(document.getElementById('rounds-select').value, 10);
+      resetSwitchStats();
 
-        // Sort scores based on high/low condition
-        eventScores.sort((a, b) => isHighWins ? b.score - a.score : a.score - b.score);
+      document.getElementById('switch-setup-panel').style.display = 'none';
+      document.getElementById('switch-active-panel').style.display = 'block';
+      
+      renderSwitchLeaderboard();
+      generateSwitchNextRound();
+    }
+
+    function generateSwitchNextRound() {
+      const teamSize = switchMode === 'singles' ? 1 : 2;
+      let availablePlayers = shuffle(players);
+      let teams = [];
+      while (availablePlayers.length >= teamSize) {
+        teams.push(availablePlayers.splice(0, teamSize));
       }
 
-      // Point & Medal mappings
+      let possiblePairs = [];
+      for (let i = 0; i < teams.length; i++) {
+        for (let j = i + 1; j < teams.length; j++) {
+          possiblePairs.push([teams[i], teams[j]]);
+        }
+      }
+
+      let freshPairs = possiblePairs.filter(pair => !switchMatchHistory.has(getMatchKey(pair[0], pair[1])));
+      if (freshPairs.length === 0) {
+        switchMatchHistory.clear();
+        freshPairs = possiblePairs;
+      }
+
+      let matches = [];
+      let usedTeams = new Set();
+      freshPairs = shuffle(freshPairs);
+
+      for (let [teamA, teamB] of freshPairs) {
+        const keyA = teamA.join(',');
+        const keyB = teamB.join(',');
+        if (!usedTeams.has(keyA) && !usedTeams.has(keyB)) {
+          matches.push({ teamA, teamB, scoreA: '', scoreB: '', submitted: false });
+          usedTeams.add(keyA);
+          usedTeams.add(keyB);
+          switchMatchHistory.add(getMatchKey(teamA, teamB));
+        }
+      }
+
+      switchMatches = matches;
+      renderSwitchMatches();
+    }
+
+    function submitSwitchScore(matchIndex) {
+      const inputA = document.getElementById(`switch-score-a-${matchIndex}`);
+      const inputB = document.getElementById(`switch-score-b-${matchIndex}`);
+      const valA = parseInt(inputA.value, 10);
+      const valB = parseInt(inputB.value, 10);
+
+      if (isNaN(valA) || isNaN(valB)) {
+        alert("Please enter numeric scores for both teams.");
+        return;
+      }
+
+      const match = switchMatches[matchIndex];
+      match.scoreA = valA;
+      match.scoreB = valB;
+      match.submitted = true;
+
+      match.teamA.forEach(p => {
+        switchStats[p].points += valA;
+        if (valA > valB) switchStats[p].wins += 1;
+      });
+      match.teamB.forEach(p => {
+        switchStats[p].points += valB;
+        if (valB > valA) switchStats[p].wins += 1;
+      });
+
+      renderSwitchLeaderboard();
+      renderSwitchMatches();
+    }
+
+    function renderSwitchMatches() {
+      const list = document.getElementById('switch-match-list');
+      const nextBtn = document.getElementById('switch-next-round-btn');
+      
+      document.getElementById('switch-round-header').innerText = `Round ${switchCurrentRound} of ${switchTotalRounds} Matchups`;
+
+      list.innerHTML = switchMatches.map((m, index) => `
+        <div class="match-card ${m.submitted ? 'completed' : ''}">
+          <div class="team-row">
+            <span>${m.teamA.join(' & ')}</span>
+            <input type="number" id="switch-score-a-${index}" class="score-input" value="${m.scoreA}" ${m.submitted ? 'disabled' : ''}>
+          </div>
+          <div class="vs">VS</div>
+          <div class="team-row">
+            <span>${m.teamB.join(' & ')}</span>
+            <input type="number" id="switch-score-b-${index}" class="score-input" value="${m.scoreB}" ${m.submitted ? 'disabled' : ''}>
+          </div>
+          ${!m.submitted ? `<button class="save-score-btn" onclick="submitSwitchScore(${index})">Save Score</button>` : '<span style="color:var(--success); font-weight:bold; font-size:0.85rem;">✓ Finalized</span>'}
+        </div>
+      `).join('');
+
+      const allSubmitted = switchMatches.length > 0 && switchMatches.every(m => m.submitted);
+      nextBtn.style.display = allSubmitted ? 'block' : 'none';
+      if (allSubmitted && switchCurrentRound === switchTotalRounds) {
+        nextBtn.innerText = 'Finalize Switch Event & Record Leaderboard';
+      } else {
+        nextBtn.innerText = 'Generate Next Round';
+      }
+    }
+
+    function renderSwitchLeaderboard() {
+      const body = document.getElementById('switch-leaderboard-body');
+      const sorted = getSortedSwitchStandings();
+
+      body.innerHTML = sorted.map((p, idx) => `
+        <tr>
+          <td>#${idx + 1}</td>
+          <td><strong>${p.name}</strong></td>
+          <td>${p.wins}</td>
+          <td>${p.points}</td>
+        </tr>
+      `).join('');
+    }
+
+    function getSortedSwitchStandings() {
+      return Object.keys(switchStats)
+        .map(p => ({ name: p, ...switchStats[p] }))
+        .sort((a, b) => b.wins - a.wins || b.points - a.points);
+    }
+
+    function handleSwitchNextRound() {
+      if (switchCurrentRound < switchTotalRounds) {
+        switchCurrentRound++;
+        generateSwitchNextRound();
+      } else {
+        finalizeSwitchEvent();
+      }
+    }
+
+    function finalizeSwitchEvent() {
+      const eventName = document.getElementById('event-select').value;
+      const sorted = getSortedSwitchStandings();
+
+      const pointsMap = { 1: 25, 2: 20, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 3, 10: 2 };
+      const medalsMap = { 1: '🥇', 2: '🥈', 3: '🥉' };
+
+      const processedResults = sorted.map((entry, index) => {
+        const rank = index + 1;
+        const points = pointsMap[rank] !== undefined ? pointsMap[rank] : 1;
+        return {
+          name: entry.name,
+          score: `${entry.wins} Wins (${entry.points} pts)`,
+          rank,
+          medal: medalsMap[rank] || '',
+          points
+        };
+      });
+
+      completedEvents.push({ eventName: `${eventName} (Switch)`, results: processedResults });
+      updateLeaderboard();
+      renderCompletedEvents();
+
+      // Reset Form State
+      document.getElementById('event-select').value = '';
+      renderScoreInputs();
+    }
+
+    /* Standard Score Entry Submit */
+    function submitEventScores() {
+      const eventName = document.getElementById('event-select').value;
+      const isHighWins = document.getElementById('score-type').value === 'high';
+      const scoreInputs = document.querySelectorAll('.player-score-field');
+      let eventScores = [];
+
+      scoreInputs.forEach(input => {
+        const value = parseFloat(input.value);
+        if (!isNaN(value)) {
+          eventScores.push({ name: input.dataset.player, score: value });
+        }
+      });
+
+      if (eventScores.length === 0) {
+        alert('Please enter scores for at least one athlete.');
+        return;
+      }
+
+      eventScores.sort((a, b) => isHighWins ? b.score - a.score : a.score - b.score);
+
       const pointsMap = { 1: 25, 2: 20, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 3, 10: 2 };
       const medalsMap = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
       const processedResults = eventScores.map((entry, index) => {
         const rank = index + 1;
-        // Assign points based on rank position
-        const points = (isSwitch && rank > 1) ? 0 : (pointsMap[rank] !== undefined ? pointsMap[rank] : 1);
+        const points = pointsMap[rank] !== undefined ? pointsMap[rank] : 1;
         return {
           ...entry,
           rank,
@@ -397,7 +718,6 @@
       updateLeaderboard();
       renderCompletedEvents();
 
-      // Reset form controls
       document.getElementById('event-select').value = '';
       renderScoreInputs();
     }
@@ -420,7 +740,6 @@
         });
       });
 
-      // Sort by Total Points, Gold, Silver, then Bronze
       const sorted = Object.keys(standings)
         .map(name => ({ name, ...standings[name] }))
         .sort((a, b) => {
@@ -451,12 +770,12 @@
       }
 
       container.innerHTML = completedEvents.map(evt => `
-        <div style="margin-bottom: 1rem; border-bottom: 1px solid #334155; padding-bottom: 0.5rem;">
+        <div style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
           <h3 style="color: var(--accent);">${evt.eventName}</h3>
           <ul>
             ${evt.results.map(r => `
               <li style="list-style: none; margin-bottom: 0.25rem;">
-                ${r.medal ? r.medal : '•'} <strong>${r.name}</strong> - Score: ${r.score} (${r.points} pts)
+                ${r.medal ? r.medal : '•'} <strong>${r.name}</strong> - Result: ${r.score} (${r.points} pts)
               </li>
             `).join('')}
           </ul>
