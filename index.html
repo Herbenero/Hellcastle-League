@@ -347,7 +347,7 @@
   <div class="card">
     <h2>🏆 Overall Leaderboard</h2>
     <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">
-      Point System: 🥇 Gold = 25 pts | 🥈 Silver = 20 pts | 🥉 Bronze = 15 pts
+      Point System: 🥇 Gold = 25 pts | 🥈 Silver = 20 pts | 🥉 Bronze = 15 pts (Ties awarded highest rank value)
     </p>
     <table>
       <thead>
@@ -378,6 +378,10 @@
     const players = [];
     const events = [];
     const completedEvents = [];
+
+    // Global Points and Medals Maps
+    const pointsMap = { 1: 25, 2: 20, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 3, 10: 2 };
+    const medalsMap = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
     // Switch Tournament State Variables
     let switchMode = 'singles';
@@ -472,7 +476,6 @@
         submitBtn.style.display = 'none';
         switchEngineContainer.style.display = 'block';
         
-        // Reset switch panel views
         document.getElementById('switch-setup-panel').style.display = 'block';
         document.getElementById('switch-active-panel').style.display = 'none';
       } else {
@@ -655,17 +658,18 @@
       const eventName = document.getElementById('event-select').value;
       const sorted = getSortedSwitchStandings();
 
-      const pointsMap = { 1: 25, 2: 20, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 3, 10: 2 };
-      const medalsMap = { 1: '🥇', 2: '🥈', 3: '🥉' };
-
-      const processedResults = sorted.map((entry, index) => {
-        const rank = index + 1;
-        const points = pointsMap[rank] !== undefined ? pointsMap[rank] : 1;
+      let currentRank = 1;
+      const processedResults = sorted.map((entry, index, array) => {
+        // Tying condition: Same number of wins AND same number of tie-breaker points
+        if (index > 0 && (entry.wins !== array[index - 1].wins || entry.points !== array[index - 1].points)) {
+          currentRank = index + 1;
+        }
+        const points = pointsMap[currentRank] !== undefined ? pointsMap[currentRank] : 1;
         return {
           name: entry.name,
           score: `${entry.wins} Wins (${entry.points} pts)`,
-          rank,
-          medal: medalsMap[rank] || '',
+          rank: currentRank,
+          medal: medalsMap[currentRank] || '',
           points
         };
       });
@@ -674,12 +678,11 @@
       updateLeaderboard();
       renderCompletedEvents();
 
-      // Reset Form State
       document.getElementById('event-select').value = '';
       renderScoreInputs();
     }
 
-    /* Standard Score Entry Submit */
+    /* Standard Score Entry Submit with Tied-Rank Scoring */
     function submitEventScores() {
       const eventName = document.getElementById('event-select').value;
       const isHighWins = document.getElementById('score-type').value === 'high';
@@ -700,16 +703,16 @@
 
       eventScores.sort((a, b) => isHighWins ? b.score - a.score : a.score - b.score);
 
-      const pointsMap = { 1: 25, 2: 20, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 3, 10: 2 };
-      const medalsMap = { 1: '🥇', 2: '🥈', 3: '🥉' };
-
-      const processedResults = eventScores.map((entry, index) => {
-        const rank = index + 1;
-        const points = pointsMap[rank] !== undefined ? pointsMap[rank] : 1;
+      let currentRank = 1;
+      const processedResults = eventScores.map((entry, index, array) => {
+        if (index > 0 && entry.score !== array[index - 1].score) {
+          currentRank = index + 1;
+        }
+        const points = pointsMap[currentRank] !== undefined ? pointsMap[currentRank] : 1;
         return {
           ...entry,
-          rank,
-          medal: medalsMap[rank] || '',
+          rank: currentRank,
+          medal: medalsMap[currentRank] || '',
           points
         };
       });
@@ -722,6 +725,7 @@
       renderScoreInputs();
     }
 
+    /* Update Overall Leaderboard with Shared Ranks */
     function updateLeaderboard() {
       const standings = {};
       players.forEach(p => {
@@ -750,16 +754,30 @@
         });
 
       const tbody = document.getElementById('leaderboard-body');
-      tbody.innerHTML = sorted.map((player, idx) => `
-        <tr>
-          <td><strong>#${idx + 1}</strong></td>
-          <td>${player.name}</td>
-          <td><strong>${player.points}</strong></td>
-          <td>${player.gold}</td>
-          <td>${player.silver}</td>
-          <td>${player.bronze}</td>
-        </tr>
-      `).join('');
+      let currentDisplayRank = 1;
+
+      tbody.innerHTML = sorted.map((player, idx, array) => {
+        const isTiedWithPrev = idx > 0 && 
+          player.points === array[idx - 1].points &&
+          player.gold === array[idx - 1].gold &&
+          player.silver === array[idx - 1].silver &&
+          player.bronze === array[idx - 1].bronze;
+
+        if (!isTiedWithPrev) {
+          currentDisplayRank = idx + 1;
+        }
+
+        return `
+          <tr>
+            <td><strong>#${currentDisplayRank}</strong></td>
+            <td>${player.name}</td>
+            <td><strong>${player.points}</strong></td>
+            <td>${player.gold}</td>
+            <td>${player.silver}</td>
+            <td>${player.bronze}</td>
+          </tr>
+        `;
+      }).join('');
     }
 
     function renderCompletedEvents() {
