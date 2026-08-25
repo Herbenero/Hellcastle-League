@@ -16,11 +16,30 @@
       --text-muted: #94a3b8;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 2rem; max-width: 1000px; margin: 0 auto; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
 
-    h1, h2, h3 { margin-bottom: 1rem; }
-    h1 { text-align: center; color: var(--accent); margin-bottom: 2rem; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    h1, h2, h3 {
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--accent);
+      margin-bottom: 2rem;
+    }
 
     .card {
       background: var(--card-bg);
@@ -30,8 +49,17 @@
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
     }
 
-    .form-group { margin-bottom: 1rem; }
-    label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
     input[type="text"], input[type="number"], select {
       width: 100%;
       padding: 0.75rem;
@@ -42,7 +70,11 @@
       font-size: 1rem;
     }
 
-    .btn-group { display: flex; gap: 0.5rem; }
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
     button {
       background: var(--accent);
       color: #0f172a;
@@ -53,32 +85,62 @@
       cursor: pointer;
       transition: opacity 0.2s;
     }
-    button:hover { opacity: 0.9; }
-    
-    .score-inputs { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0; }
-    .score-input-card { background: #0f172a; padding: 1rem; border-radius: 6px; }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #334155; }
-    th { color: var(--text-muted); font-weight: 600; }
-    
-    .badge {
-      display: inline-block;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      text-align: center;
-      line-height: 24px;
-      font-weight: bold;
-      color: #0f172a;
-      font-size: 0.8rem;
+    button:hover {
+      opacity: 0.9;
     }
-    .badge-gold { background-color: var(--gold); }
-    .badge-silver { background-color: var(--silver); }
-    .badge-bronze { background-color: var(--bronze); }
 
-    .tag-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
-    .tag { background: #334155; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.9rem; }
+    .score-inputs {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    .score-input-card {
+      background: #0f172a;
+      padding: 1rem;
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #334155;
+    }
+
+    th {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .tag {
+      background: #334155;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+
+    .switch-option {
+      background: #0f172a;
+      padding: 0.75rem;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      margin-bottom: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -99,7 +161,6 @@
         </div>
         <div id="player-tags" class="tag-list"></div>
       </div>
-
       <div>
         <div class="form-group">
           <label for="event-input">Add Event Name</label>
@@ -116,6 +177,7 @@
   <!-- Score Entry Section -->
   <div class="card">
     <h2>2. Enter Event Results</h2>
+    
     <div class="form-group">
       <label for="event-select">Select Event</label>
       <select id="event-select" onchange="renderScoreInputs()">
@@ -123,6 +185,23 @@
       </select>
     </div>
 
+    <!-- Switch Toggle Option -->
+    <div class="form-group switch-option" id="switch-container" style="display: none;">
+      <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text); margin: 0;">
+        <input type="checkbox" id="is-switch-game" onchange="toggleSwitchMode()" style="width: auto;">
+        <span>Play <strong>"Switch"</strong> to decide event winner?</span>
+      </label>
+    </div>
+
+    <!-- Switch Winner Dropdown -->
+    <div class="form-group" id="switch-winner-container" style="display: none;">
+      <label for="switch-winner-select">Select Switch Winner</label>
+      <select id="switch-winner-select">
+        <option value="">-- Choose Winner --</option>
+      </select>
+    </div>
+
+    <!-- Standard Scoring Rule -->
     <div class="form-group" id="scoring-type-container" style="display: none;">
       <label for="score-type">Scoring Rule</label>
       <select id="score-type">
@@ -131,7 +210,9 @@
       </select>
     </div>
 
+    <!-- Score Inputs Grid -->
     <div id="score-inputs" class="score-inputs"></div>
+
     <button id="submit-scores-btn" style="display: none;" onclick="submitEventScores()">Save & Record Event</button>
   </div>
 
@@ -139,7 +220,7 @@
   <div class="card">
     <h2>🏆 Overall Leaderboard</h2>
     <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">
-      Point System: 🥇 Gold = 25 pts | 🥈 Silver = 20 pts | 🥉 Bronze = 15 pt
+      Point System: 🥇 Gold = 25 pts | 🥈 Silver = 20 pts | 🥉 Bronze = 15 pts
     </p>
     <table>
       <thead>
@@ -167,188 +248,221 @@
   </div>
 
   <script>
-  const players = [];
-  const events = [];
-  const completedEvents = [];
+    const players = [];
+    const events = [];
+    const completedEvents = [];
 
-  function addPlayer() {
-    const input = document.getElementById('player-input');
-    const name = input.value.trim();
-    if (name && !players.includes(name)) {
-      players.push(name);
-      input.value = '';
-      renderSetupUI();
-    }
-  }
-
-  function addEvent() {
-    const input = document.getElementById('event-input');
-    const name = input.value.trim();
-    if (name && !events.includes(name)) {
-      events.push(name);
-      input.value = '';
-      renderSetupUI();
-    }
-  }
-
-  function renderSetupUI() {
-    document.getElementById('player-tags').innerHTML = players.map(p => `<span class="tag">${p}</span>`).join('');
-    document.getElementById('event-tags').innerHTML = events.map(e => `<span class="tag">${e}</span>`).join('');
-    
-    const select = document.getElementById('event-select');
-    select.innerHTML = '<option value="">-- Choose Event --</option>' + 
-      events.map(e => `<option value="${e}">${e}</option>`).join('');
-    renderScoreInputs();
-  }
-
-  function renderScoreInputs() {
-    const selectedEvent = document.getElementById('event-select').value;
-    const container = document.getElementById('score-inputs');
-    const submitBtn = document.getElementById('submit-scores-btn');
-    const scoringTypeContainer = document.getElementById('scoring-type-container');
-
-    if (!selectedEvent || players.length === 0) {
-      container.innerHTML = '';
-      submitBtn.style.display = 'none';
-      scoringTypeContainer.style.display = 'none';
-      return;
-    }
-
-    scoringTypeContainer.style.display = 'block';
-    submitBtn.style.display = 'block';
-
-    container.innerHTML = players.map(player => `
-      <div class="score-input-card">
-        <label>${player}</label>
-        <input type="number" step="any" data-player="${player}" class="player-score-field" placeholder="Enter score">
-      </div>
-    `).join('');
-  }
-
-  function submitEventScores() {
-    const eventName = document.getElementById('event-select').value;
-    const isHighWins = document.getElementById('score-type').value === 'high';
-    const scoreInputs = document.querySelectorAll('.player-score-field');
-    
-    const eventScores = [];
-    scoreInputs.forEach(input => {
-      const value = parseFloat(input.value);
-      if (!isNaN(value)) {
-        eventScores.push({ name: input.dataset.player, score: value });
+    function addPlayer() {
+      const input = document.getElementById('player-input');
+      const name = input.value.trim();
+      if (name && !players.includes(name)) {
+        players.push(name);
+        input.value = '';
+        renderSetupUI();
       }
-    });
-
-    if (eventScores.length === 0) {
-      alert('Please enter scores for at least one athlete.');
-      return;
     }
 
-    // Sort scores based on criteria
-    eventScores.sort((a, b) => isHighWins ? b.score - a.score : a.score - b.score);
+    function addEvent() {
+      const input = document.getElementById('event-input');
+      const name = input.value.trim();
+      if (name && !events.includes(name)) {
+        events.push(name);
+        input.value = '';
+        renderSetupUI();
+      }
+    }
 
-    // Points distribution schedule
-    const pointsMap = { 
-      1: 25, 
-      2: 20, 
-      3: 15, 
-      4: 12, 
-      5: 10, 
-      6: 8, 
-      7: 6, 
-      8: 4, 
-      9: 3, 
-      10: 2 
-    };
-    const medalsMap = { 1: '🥇', 2: '🥈', 3: '🥉' };
-
-    const processedResults = eventScores.map((entry, index) => {
-      const rank = index + 1;
-      // Assign points from map, or fallback to 1 pt for rank 11+
-      const points = pointsMap[rank] !== undefined ? pointsMap[rank] : 1;
+    function renderSetupUI() {
+      document.getElementById('player-tags').innerHTML = players.map(p => `<span class="tag">${p}</span>`).join('');
+      document.getElementById('event-tags').innerHTML = events.map(e => `<span class="tag">${e}</span>`).join('');
       
-      return {
-        ...entry,
-        rank,
-        medal: medalsMap[rank] || '',
-        points
-      };
-    });
-
-    completedEvents.push({
-      eventName,
-      results: processedResults
-    });
-
-    updateLeaderboard();
-    renderCompletedEvents();
-    
-    // Reset form
-    document.getElementById('event-select').value = '';
-    renderScoreInputs();
-  }
-
-  function updateLeaderboard() {
-    const standings = {};
-    players.forEach(p => {
-      standings[p] = { points: 0, gold: 0, silver: 0, bronze: 0 };
-    });
-
-    completedEvents.forEach(evt => {
-      evt.results.forEach(res => {
-        if (!standings[res.name]) {
-          standings[res.name] = { points: 0, gold: 0, silver: 0, bronze: 0 };
-        }
-        standings[res.name].points += res.points;
-        if (res.rank === 1) standings[res.name].gold++;
-        if (res.rank === 2) standings[res.name].silver++;
-        if (res.rank === 3) standings[res.name].bronze++;
-      });
-    });
-
-    // Sort by Total Points, then Golds, Silvers, Bronzes
-    const sorted = Object.keys(standings).map(name => ({
-      name,
-      ...standings[name]
-    })).sort((a, b) => {
-      if (b.points !== a.points) return b.points - a.points;
-      if (b.gold !== a.gold) return b.gold - a.gold;
-      if (b.silver !== a.silver) return b.silver - a.silver;
-      return b.bronze - a.bronze;
-    });
-
-    const tbody = document.getElementById('leaderboard-body');
-    tbody.innerHTML = sorted.map((player, idx) => `
-      <tr>
-        <td><strong>#${idx + 1}</strong></td>
-        <td>${player.name}</td>
-        <td><strong>${player.points}</strong></td>
-        <td>${player.gold}</td>
-        <td>${player.silver}</td>
-        <td>${player.bronze}</td>
-      </tr>
-    `).join('');
-  }
-
-  function renderCompletedEvents() {
-    const container = document.getElementById('completed-events-list');
-    if (completedEvents.length === 0) {
-      container.innerHTML = '<p style="color: var(--text-muted);">No completed events yet.</p>';
-      return;
+      const select = document.getElementById('event-select');
+      select.innerHTML = '<option value="">-- Choose Event --</option>' + events.map(e => `<option value="${e}">${e}</option>`).join('');
+      
+      renderScoreInputs();
     }
 
-    container.innerHTML = completedEvents.map(evt => `
-      <div style="margin-bottom: 1rem; border-bottom: 1px solid #334155; padding-bottom: 0.5rem;">
-        <h3 style="color: var(--accent);">${evt.eventName}</h3>
-        <ul>
-          ${evt.results.map(r => `
-            <li style="list-style: none; margin-bottom: 0.25rem;">
-              ${r.medal ? r.medal : '•'} <strong>${r.name}</strong> - Score: ${r.score} (${r.points} pts)
-            </li>
-          `).join('')}
-        </ul>
-      </div>
-    `).join('');
-  }
-</script>
+    function renderScoreInputs() {
+      const selectedEvent = document.getElementById('event-select').value;
+      const container = document.getElementById('score-inputs');
+      const submitBtn = document.getElementById('submit-scores-btn');
+      const scoringTypeContainer = document.getElementById('scoring-type-container');
+      const switchContainer = document.getElementById('switch-container');
+      const switchWinnerContainer = document.getElementById('switch-winner-container');
+
+      // Reset Switch selection state
+      document.getElementById('is-switch-game').checked = false;
+      switchWinnerContainer.style.display = 'none';
+
+      if (!selectedEvent || players.length === 0) {
+        container.innerHTML = '';
+        submitBtn.style.display = 'none';
+        scoringTypeContainer.style.display = 'none';
+        switchContainer.style.display = 'none';
+        return;
+      }
+
+      scoringTypeContainer.style.display = 'block';
+      switchContainer.style.display = 'block';
+      submitBtn.style.display = 'block';
+      container.style.display = 'grid';
+
+      // Standard numeric score fields
+      container.innerHTML = players.map(player => `
+        <div class="score-input-card">
+          <label>${player}</label>
+          <input type="number" step="any" data-player="${player}" class="player-score-field" placeholder="Enter score">
+        </div>
+      `).join('');
+
+      // Populate Switch Winner Dropdown
+      const winnerSelect = document.getElementById('switch-winner-select');
+      winnerSelect.innerHTML = '<option value="">-- Choose Winner --</option>' + 
+        players.map(p => `<option value="${p}">${p}</option>`).join('');
+    }
+
+    function toggleSwitchMode() {
+      const isSwitch = document.getElementById('is-switch-game').checked;
+      const scoreInputs = document.getElementById('score-inputs');
+      const scoringTypeContainer = document.getElementById('scoring-type-container');
+      const switchWinnerContainer = document.getElementById('switch-winner-container');
+
+      if (isSwitch) {
+        scoreInputs.style.display = 'none';
+        scoringTypeContainer.style.display = 'none';
+        switchWinnerContainer.style.display = 'block';
+      } else {
+        scoreInputs.style.display = 'grid';
+        scoringTypeContainer.style.display = 'block';
+        switchWinnerContainer.style.display = 'none';
+      }
+    }
+
+    function submitEventScores() {
+      const eventName = document.getElementById('event-select').value;
+      const isSwitch = document.getElementById('is-switch-game').checked;
+      let eventScores = [];
+
+      if (isSwitch) {
+        const winner = document.getElementById('switch-winner-select').value;
+        if (!winner) {
+          alert('Please select the Switch winner.');
+          return;
+        }
+
+        // Winner gets 1st place, remaining players get unranked entry
+        eventScores.push({ name: winner, score: 'Switch Winner' });
+        players.forEach(p => {
+          if (p !== winner) {
+            eventScores.push({ name: p, score: 'Participant' });
+          }
+        });
+      } else {
+        const isHighWins = document.getElementById('score-type').value === 'high';
+        const scoreInputs = document.querySelectorAll('.player-score-field');
+
+        scoreInputs.forEach(input => {
+          const value = parseFloat(input.value);
+          if (!isNaN(value)) {
+            eventScores.push({ name: input.dataset.player, score: value });
+          }
+        });
+
+        if (eventScores.length === 0) {
+          alert('Please enter scores for at least one athlete.');
+          return;
+        }
+
+        // Sort scores based on high/low condition
+        eventScores.sort((a, b) => isHighWins ? b.score - a.score : a.score - b.score);
+      }
+
+      // Point & Medal mappings
+      const pointsMap = { 1: 25, 2: 20, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 3, 10: 2 };
+      const medalsMap = { 1: '🥇', 2: '🥈', 3: '🥉' };
+
+      const processedResults = eventScores.map((entry, index) => {
+        const rank = index + 1;
+        // Assign points based on rank position
+        const points = (isSwitch && rank > 1) ? 0 : (pointsMap[rank] !== undefined ? pointsMap[rank] : 1);
+        return {
+          ...entry,
+          rank,
+          medal: medalsMap[rank] || '',
+          points
+        };
+      });
+
+      completedEvents.push({ eventName, results: processedResults });
+      updateLeaderboard();
+      renderCompletedEvents();
+
+      // Reset form controls
+      document.getElementById('event-select').value = '';
+      renderScoreInputs();
+    }
+
+    function updateLeaderboard() {
+      const standings = {};
+      players.forEach(p => {
+        standings[p] = { points: 0, gold: 0, silver: 0, bronze: 0 };
+      });
+
+      completedEvents.forEach(evt => {
+        evt.results.forEach(res => {
+          if (!standings[res.name]) {
+            standings[res.name] = { points: 0, gold: 0, silver: 0, bronze: 0 };
+          }
+          standings[res.name].points += res.points;
+          if (res.rank === 1) standings[res.name].gold++;
+          if (res.rank === 2) standings[res.name].silver++;
+          if (res.rank === 3) standings[res.name].bronze++;
+        });
+      });
+
+      // Sort by Total Points, Gold, Silver, then Bronze
+      const sorted = Object.keys(standings)
+        .map(name => ({ name, ...standings[name] }))
+        .sort((a, b) => {
+          if (b.points !== a.points) return b.points - a.points;
+          if (b.gold !== a.gold) return b.gold - a.gold;
+          if (b.silver !== a.silver) return b.silver - a.silver;
+          return b.bronze - a.bronze;
+        });
+
+      const tbody = document.getElementById('leaderboard-body');
+      tbody.innerHTML = sorted.map((player, idx) => `
+        <tr>
+          <td><strong>#${idx + 1}</strong></td>
+          <td>${player.name}</td>
+          <td><strong>${player.points}</strong></td>
+          <td>${player.gold}</td>
+          <td>${player.silver}</td>
+          <td>${player.bronze}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderCompletedEvents() {
+      const container = document.getElementById('completed-events-list');
+      if (completedEvents.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted);">No completed events yet.</p>';
+        return;
+      }
+
+      container.innerHTML = completedEvents.map(evt => `
+        <div style="margin-bottom: 1rem; border-bottom: 1px solid #334155; padding-bottom: 0.5rem;">
+          <h3 style="color: var(--accent);">${evt.eventName}</h3>
+          <ul>
+            ${evt.results.map(r => `
+              <li style="list-style: none; margin-bottom: 0.25rem;">
+                ${r.medal ? r.medal : '•'} <strong>${r.name}</strong> - Score: ${r.score} (${r.points} pts)
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      `).join('');
+    }
+  </script>
 </body>
 </html>
