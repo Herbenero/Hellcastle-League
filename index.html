@@ -9,14 +9,14 @@
       --gold: #ffd700;
       --silver: #c0c0c0;
       --bronze: #cd7f32;
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --accent: #38bdf8;
-      --accent-hover: #0284c7;
+      --bg: #008080; /* Teal background */
+      --card-bg: #004d4d; /* Darker teal card background */
+      --accent: #8b5cf6; /* Purple accent / button color */
+      --accent-hover: #7c3aed; /* Darker purple hover state */
       --success: #22c55e;
       --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --border: #334155;
+      --text-muted: #cbd5e1;
+      --border: #006666;
     }
 
     * {
@@ -40,7 +40,7 @@
 
     h1 {
       text-align: center;
-      color: var(--accent);
+      color: #ffffff;
       margin-bottom: 2rem;
     }
 
@@ -68,7 +68,7 @@
       padding: 0.75rem;
       border-radius: 6px;
       border: 1px solid var(--border);
-      background: #0f172a;
+      background: #003333;
       color: var(--text);
       font-size: 1rem;
     }
@@ -80,16 +80,17 @@
 
     button {
       background: var(--accent);
-      color: #0f172a;
+      color: #ffffff;
       font-weight: bold;
       border: none;
       padding: 0.75rem 1.5rem;
       border-radius: 6px;
       cursor: pointer;
-      transition: opacity 0.2s;
+      transition: background-color 0.2s, opacity 0.2s;
     }
 
     button:hover {
+      background: var(--accent-hover);
       opacity: 0.9;
     }
 
@@ -101,7 +102,7 @@
     }
 
     .score-input-card {
-      background: #0f172a;
+      background: #003333;
       padding: 1rem;
       border-radius: 6px;
     }
@@ -131,14 +132,14 @@
     }
 
     .tag {
-      background: #334155;
+      background: #006666;
       padding: 0.25rem 0.75rem;
       border-radius: 20px;
       font-size: 0.9rem;
     }
 
     .switch-option {
-      background: #0f172a;
+      background: #003333;
       padding: 0.75rem;
       border-radius: 6px;
       border: 1px solid var(--border);
@@ -155,7 +156,7 @@
     .mode-btn {
       flex: 1;
       padding: 0.75rem;
-      background: #0f172a;
+      background: #003333;
       border: 1px solid var(--border);
       color: var(--text-muted);
       border-radius: 6px;
@@ -165,12 +166,12 @@
 
     .mode-btn.active {
       background: var(--accent);
-      color: #0f172a;
+      color: #ffffff;
       border-color: var(--accent);
     }
 
     .match-card {
-      background: #0f172a;
+      background: #003333;
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 1rem;
@@ -189,7 +190,7 @@
       align-items: center;
       margin: 0.5rem 0;
       padding: 0.5rem;
-      background: #1e293b;
+      background: #004d4d;
       border-radius: 4px;
     }
 
@@ -200,7 +201,7 @@
     }
 
     .vs {
-      color: var(--accent);
+      color: #e9d5ff;
       font-weight: bold;
       margin: 0.25rem 0;
     }
@@ -220,7 +221,7 @@
     }
 
     .save-score-btn {
-      background: #334155;
+      background: #006666;
       color: white;
       border: 1px solid var(--border);
       padding: 0.4rem 0.8rem;
@@ -231,12 +232,11 @@
 
     .save-score-btn:hover {
       background: var(--accent);
-      color: #0f172a;
+      color: #ffffff;
     }
   </style>
 </head>
 <body>
-
   <h1>🏆 Hellcastle Olympic Games Tracker</h1>
 
   <!-- 1. Tournament Setup -->
@@ -269,7 +269,6 @@
   <!-- 2. Score Entry Section -->
   <div class="card">
     <h2>2. Enter Event Results</h2>
-    
     <div class="form-group">
       <label for="event-select">Select Event</label>
       <select id="event-select" onchange="renderScoreInputs()">
@@ -286,7 +285,7 @@
     </div>
 
     <!-- Embedded Switch Engine Panel -->
-    <div id="switch-engine-container" style="display: none; background: #0f172a; padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1rem;">
+    <div id="switch-engine-container" style="display: none; background: #003333; padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1rem;">
       <h3>🎮 Switch Tournament Config</h3>
       
       <div id="switch-setup-panel">
@@ -294,21 +293,17 @@
           <button class="mode-btn active" id="singles-btn" onclick="setSwitchMode('singles')">Singles (1v1)</button>
           <button class="mode-btn" id="doubles-btn" onclick="setSwitchMode('doubles')">Doubles (2v2)</button>
         </div>
-        
         <div class="form-group">
           <label for="rounds-select">Rounds to Play:</label>
           <select id="rounds-select"></select>
         </div>
-
         <button class="action-btn" onclick="startSwitchEvent()">Start Switch Event</button>
       </div>
 
       <!-- Active Switch Tournament View -->
       <div id="switch-active-panel" style="display: none;">
-        <h4 id="switch-round-header" style="color: var(--accent); margin-bottom: 1rem;">Round 1 Matchups</h4>
-        
+        <h4 id="switch-round-header" style="color: #e9d5ff; margin-bottom: 1rem;">Round 1 Matchups</h4>
         <div id="switch-match-list"></div>
-        
         <button class="action-btn submit-btn" id="switch-next-round-btn" onclick="handleSwitchNextRound()" style="display: none;">Generate Next Round</button>
         
         <div style="margin-top: 1.5rem;">
@@ -339,7 +334,6 @@
 
     <!-- Score Inputs Grid -->
     <div id="score-inputs" class="score-inputs"></div>
-
     <button id="submit-scores-btn" style="display: none;" onclick="submitEventScores()">Save & Record Event</button>
   </div>
 
@@ -475,7 +469,6 @@
         scoringTypeContainer.style.display = 'none';
         submitBtn.style.display = 'none';
         switchEngineContainer.style.display = 'block';
-        
         document.getElementById('switch-setup-panel').style.display = 'block';
         document.getElementById('switch-active-panel').style.display = 'none';
       } else {
@@ -507,7 +500,9 @@
       switchMatchHistory.clear();
       switchCurrentRound = 1;
       switchStats = {};
-      players.forEach(p => { switchStats[p] = { wins: 0, points: 0 }; });
+      players.forEach(p => {
+        switchStats[p] = { wins: 0, points: 0 };
+      });
     }
 
     function startSwitchEvent() {
@@ -518,10 +513,8 @@
       }
       switchTotalRounds = parseInt(document.getElementById('rounds-select').value, 10);
       resetSwitchStats();
-
       document.getElementById('switch-setup-panel').style.display = 'none';
       document.getElementById('switch-active-panel').style.display = 'block';
-      
       renderSwitchLeaderboard();
       generateSwitchNextRound();
     }
@@ -530,6 +523,7 @@
       const teamSize = switchMode === 'singles' ? 1 : 2;
       let availablePlayers = shuffle(players);
       let teams = [];
+
       while (availablePlayers.length >= teamSize) {
         teams.push(availablePlayers.splice(0, teamSize));
       }
@@ -542,6 +536,7 @@
       }
 
       let freshPairs = possiblePairs.filter(pair => !switchMatchHistory.has(getMatchKey(pair[0], pair[1])));
+
       if (freshPairs.length === 0) {
         switchMatchHistory.clear();
         freshPairs = possiblePairs;
@@ -586,6 +581,7 @@
         switchStats[p].points += valA;
         if (valA > valB) switchStats[p].wins += 1;
       });
+
       match.teamB.forEach(p => {
         switchStats[p].points += valB;
         if (valB > valA) switchStats[p].wins += 1;
@@ -598,7 +594,7 @@
     function renderSwitchMatches() {
       const list = document.getElementById('switch-match-list');
       const nextBtn = document.getElementById('switch-next-round-btn');
-      
+
       document.getElementById('switch-round-header').innerText = `Round ${switchCurrentRound} of ${switchTotalRounds} Matchups`;
 
       list.innerHTML = switchMatches.map((m, index) => `
@@ -618,6 +614,7 @@
 
       const allSubmitted = switchMatches.length > 0 && switchMatches.every(m => m.submitted);
       nextBtn.style.display = allSubmitted ? 'block' : 'none';
+
       if (allSubmitted && switchCurrentRound === switchTotalRounds) {
         nextBtn.innerText = 'Finalize Switch Event & Record Leaderboard';
       } else {
@@ -660,7 +657,6 @@
 
       let currentRank = 1;
       const processedResults = sorted.map((entry, index, array) => {
-        // Tying condition: Same number of wins AND same number of tie-breaker points
         if (index > 0 && (entry.wins !== array[index - 1].wins || entry.points !== array[index - 1].points)) {
           currentRank = index + 1;
         }
@@ -674,7 +670,11 @@
         };
       });
 
-      completedEvents.push({ eventName: `${eventName} (Switch)`, results: processedResults });
+      completedEvents.push({
+        eventName: `${eventName} (Switch)`,
+        results: processedResults
+      });
+
       updateLeaderboard();
       renderCompletedEvents();
 
@@ -687,8 +687,8 @@
       const eventName = document.getElementById('event-select').value;
       const isHighWins = document.getElementById('score-type').value === 'high';
       const scoreInputs = document.querySelectorAll('.player-score-field');
-      let eventScores = [];
 
+      let eventScores = [];
       scoreInputs.forEach(input => {
         const value = parseFloat(input.value);
         if (!isNaN(value)) {
@@ -757,7 +757,7 @@
       let currentDisplayRank = 1;
 
       tbody.innerHTML = sorted.map((player, idx, array) => {
-        const isTiedWithPrev = idx > 0 && 
+        const isTiedWithPrev = idx > 0 &&
           player.points === array[idx - 1].points &&
           player.gold === array[idx - 1].gold &&
           player.silver === array[idx - 1].silver &&
@@ -789,7 +789,7 @@
 
       container.innerHTML = completedEvents.map(evt => `
         <div style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
-          <h3 style="color: var(--accent);">${evt.eventName}</h3>
+          <h3 style="color: #e9d5ff;">${evt.eventName}</h3>
           <ul>
             ${evt.results.map(r => `
               <li style="list-style: none; margin-bottom: 0.25rem;">
