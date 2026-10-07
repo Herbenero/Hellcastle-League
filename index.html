@@ -208,7 +208,7 @@
           <label for="league-name-input">Create New League Name</label>
           <div style="display: flex; gap: 8px;">
             <input type="text" id="league-name-input" placeholder="e.g. HAAL #1" style="flex: 1;">
-            <button onclick="setActiveLeague()">Set League</button>
+            <button id="set-league-btn" onclick="setActiveLeague()">Set League</button>
           </div>
         </div>
       </div>
@@ -339,8 +339,10 @@
 
     // --- Firebase Sync Helpers ---
     async function syncLeagueToFirebase() {
-      const docId = currentLeagueName.trim().replace(/\s+/g, '_');
-      const leagueRef = doc(db, "leagues", docId);
+      const sanitizedDocId = currentLeagueName.trim().replace(/[/\\?%*:|"<>]/g, '_');
+      if (!sanitizedDocId) return;
+
+      const leagueRef = doc(db, "leagues", sanitizedDocId);
 
       try {
         await setDoc(leagueRef, {
@@ -350,7 +352,7 @@
         }, { merge: true });
 
         console.log(`Successfully synced league: ${currentLeagueName}`);
-        fetchSavedLeagues();
+        await fetchSavedLeagues();
       } catch (error) {
         console.error("Error saving league to Firebase: ", error);
       }
@@ -383,14 +385,17 @@
 
     async function setActiveLeague() {
       const input = document.getElementById('league-name-input');
-      const name = input.value.trim();
+      const name = input ? input.value.trim() : '';
       if (!name) {
         alert("Please enter a valid league name.");
         return;
       }
 
       currentLeagueName = name;
-      document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
+      const header = document.getElementById('current-league-header');
+      if (header) {
+        header.innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
+      }
       
       players.length = 0;
       events.length = 0;
@@ -402,7 +407,7 @@
       renderCompletedEvents();
 
       await syncLeagueToFirebase();
-      input.value = '';
+      if (input) input.value = '';
     }
 
     async function loadSelectedLeague() {
@@ -413,8 +418,8 @@
       currentLeagueName = leagueName;
       document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
 
-      const docId = leagueName.trim().replace(/\s+/g, '_');
-      const leagueRef = doc(db, "leagues", docId);
+      const sanitizedDocId = leagueName.trim().replace(/[/\\?%*:|"<>]/g, '_');
+      const leagueRef = doc(db, "leagues", sanitizedDocId);
 
       try {
         const docSnap = await getDoc(leagueRef);
@@ -423,6 +428,7 @@
           
           completedEvents.length = 0;
           players.length = 0;
+          events.length = 0;
           editingIndex = null;
 
           if (data.completedEvents) {
@@ -623,3 +629,99 @@
         const localDate = new Date(evt.timestamp);
         localDate.setMinutes(localDate.getMinutes() - localDate.getTimezoneOffset());
         document.getElementById('event-date').value = localDate.toISOString().slice(0, 16);
+      }
+
+      renderScoreInputs(evt);
+
+      window.scrollTo({ top: document.getElementById('event-select').offsetTop - 100, behavior: 'smooth' });
+    }
+
+    // --- Standings & Logs Rendering ---
+    function updateLeaderboard() {
+      const totals = {};
+
+      completedEvents.forEach(evt => {
+        evt.results.forEach(res => {
+          if (!totals[res.name]) {
+            totals[res.name] = { points: 0, golds: 0, silvers: 0, bronzes: 0 };
+          }
+          totals[res.name].points += res.points || 0;
+          if (res.rank === 1) totals[res.name].golds++;
+          if (res.rank === 2) totals[res.name].silvers++;
+          if (res.rank === 3) totals[res.name].bronzes++;
+        });
+      });
+
+      const leaderboardArray = Object.keys(totals).map(name => ({
+        name,
+        ...totals[name]
+      })).sort((a, b) => b.points - a.points);
+
+      const tbody = document.getElementById('leaderboard-body');
+      if (tbody) {
+        tbody.innerHTML = leaderboardArray.map((entry, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${entry.name}</td>
+            <td><strong>${entry.points}</strong></td>
+            <td>${entry.golds}</td>
+            <td>${entry.silvers}</td>
+            <td>${entry.bronzes}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    function renderCompletedEvents() {
+      const container = document.getElementById('completed-events-log');
+      if (container) {
+        container.innerHTML = completedEvents.map((evt, idx) => `
+          <div class="event-card">
+            <div class="event-header">
+              <h3 style="margin: 0;">${evt.eventName} <small>(${new Date(evt.timestamp).toLocaleString()})</small></h3>
+              <div class="event-actions">
+                <button onclick="editEvent(${idx})">✏️ Edit</button>
+                <button class="btn-danger" onclick="deleteEvent(${idx})">🗑️ Delete</button>
+              </div>
+            </div>
+            <ul>
+              ${evt.results.map(r => `<li>${r.rank}. ${r.medal}${r.name} - ${r.score} (${r.points} pts)</li>`).join('')}
+            </ul>
+          </div>
+        `).join('');
+      }
+    }
+
+    // EXPOSE ALL FUNCTIONS TO WINDOW SCOPE FOR INLINE HTML HANDLERS
+    window.setActiveLeague = setActiveLeague;
+    window.loadSelectedLeague = loadSelectedLeague;
+    window.addPlayer = addPlayer;
+    window.removePlayer = removePlayer;
+    window.addEvent = addEvent;
+    window.removeEvent = removeEvent;
+    window.renderScoreInputs = renderScoreInputs;
+    window.submitEventScores = submitEventScores;
+    window.deleteEvent = deleteEvent;
+    window.editEvent = editEvent;
+
+    // --- Attach Event Listeners on Load ---
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('league-select')?.addEventListener('change', loadSelectedLeague);
+      document.getElementById('event-select')?.addEventListener('change', () => renderScoreInputs());
+
+      document.getElementById('league-name-input')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') setActiveLeague();
+      });
+      document.getElementById('player-input')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addPlayer();
+      });
+      document.getElementById('event-input')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addEvent();
+      });
+
+      setNowDate();
+      fetchSavedLeagues();
+    });
+  </script>
+</body>
+</html>
