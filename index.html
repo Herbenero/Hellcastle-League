@@ -3,347 +3,206 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hellcastle Archery Arena League</title>
+  <title>🏆 Hellcastle Archery Arena League</title>
+  
+  <!-- Firebase Modular SDK Setup -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getFirestore, 
+      doc, 
+      setDoc, 
+      getDoc, 
+      collection, 
+      getDocs, 
+      arrayUnion, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvL2K8R82qk3fG4EEKZ6sOIiieLcCKckA",
+      authDomain: "haal-fc862.firebaseapp.com",
+      projectId: "haal-fc862",
+      storageBucket: "haal-fc862.firebasestorage.app",
+      messagingSenderId: "1077392905739",
+      appId: "1:1077392905739:web:cc047fae886356663fd90e",
+      measurementId: "G-P99RVN1XBF"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Expose Firebase functions globally for main application script
+    window.db = db;
+    window.doc = doc;
+    window.setDoc = setDoc;
+    window.getDoc = getDoc;
+    window.collection = collection;
+    window.getDocs = getDocs;
+    window.arrayUnion = arrayUnion;
+    window.serverTimestamp = serverTimestamp;
+  </script>
+
   <style>
     :root {
+      --bg: #121212;
+      --card-bg: #1e1e1e;
+      --text: #e0e0e0;
       --gold: #ffd700;
-      --silver: #c0c0c0;
-      --bronze: #cd7f32;
-      --bg: #008080; /* Teal background */
-      --card-bg: #004d4d; /* Darker teal card background */
-      --accent: #8b5cf6; /* Purple accent / button color */
-      --accent-hover: #7c3aed; /* Darker purple hover state */
-      --success: #22c55e;
-      --text: #f8fafc;
-      --text-muted: #cbd5e1;
-      --border: #006666;
+      --border: #333;
+      --accent: #4caf50;
+      --accent-hover: #45a049;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-
     body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: var(--bg);
       color: var(--text);
-      padding: 2rem;
-      max-width: 1000px;
-      margin: 0 auto;
+      margin: 0;
+      padding: 20px;
     }
-
     h1, h2, h3 {
-      margin-bottom: 1rem;
-    }
-
-    h1 {
       text-align: center;
-      color: #ffffff;
-      margin-bottom: 2rem;
+      color: var(--gold);
     }
-
     .card {
-      background: var(--card-bg);
-      padding: 1.5rem;
-      border-radius: 12px;
-      margin-bottom: 2rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
     }
-
     .form-group {
-      margin-bottom: 1rem;
+      margin-bottom: 15px;
     }
-
     label {
       display: block;
-      margin-bottom: 0.5rem;
-      color: var(--text-muted);
-      font-size: 0.9rem;
+      margin-bottom: 5px;
+      font-weight: bold;
     }
-
     input[type="text"], input[type="number"], select {
       width: 100%;
-      padding: 0.75rem;
-      border-radius: 6px;
+      padding: 10px;
+      border-radius: 4px;
       border: 1px solid var(--border);
-      background: #003333;
-      color: var(--text);
-      font-size: 1rem;
+      background-color: #2a2a2a;
+      color: #fff;
+      box-sizing: border-box;
     }
-
     .btn-group {
       display: flex;
-      gap: 0.5rem;
+      gap: 10px;
     }
-
     button {
-      background: var(--accent);
-      color: #ffffff;
-      font-weight: bold;
+      padding: 10px 15px;
       border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 6px;
+      border-radius: 4px;
+      background-color: var(--accent);
+      color: white;
       cursor: pointer;
-      transition: background-color 0.2s, opacity 0.2s;
+      font-weight: bold;
     }
-
     button:hover {
-      background: var(--accent-hover);
-      opacity: 0.9;
+      background-color: var(--accent-hover);
     }
-
-    .score-inputs {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1rem;
-      margin: 1rem 0;
-    }
-
-    .score-input-card {
-      background: #003333;
-      padding: 1rem;
-      border-radius: 6px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-
-    th, td {
-      padding: 0.75rem;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-
-    th {
-      color: var(--text-muted);
-      font-weight: 600;
-    }
-
     .tag-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
+      gap: 8px;
+      margin-top: 10px;
     }
-
     .tag {
-      background: #006666;
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.9rem;
-    }
-
-    .switch-option {
-      background: #003333;
-      padding: 0.75rem;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      margin-bottom: 1rem;
-    }
-
-    /* Embedded Switch Styles */
-    .mode-selection {
+      background: #333;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 0.9em;
       display: flex;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .mode-btn {
-      flex: 1;
-      padding: 0.75rem;
-      background: #003333;
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .mode-btn.active {
-      background: var(--accent);
-      color: #ffffff;
-      border-color: var(--accent);
-    }
-
-    .match-card {
-      background: #003333;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-
-    .match-card.completed {
-      border-color: var(--success);
-      opacity: 0.9;
-    }
-
-    .team-row {
-      display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin: 0.5rem 0;
-      padding: 0.5rem;
-      background: #004d4d;
-      border-radius: 4px;
+      gap: 5px;
     }
-
-    .score-input {
-      width: 60px !important;
-      padding: 0.4rem !important;
+    .tag button {
+      background: transparent;
+      color: #ff5555;
+      padding: 0;
+      font-size: 1.1em;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px;
       text-align: center;
     }
-
-    .vs {
-      color: #e9d5ff;
-      font-weight: bold;
-      margin: 0.25rem 0;
-    }
-
-    .action-btn {
-      width: 100%;
-      margin-top: 0.5rem;
-    }
-
-    .submit-btn {
-      background: var(--success);
-      color: white;
-    }
-
-    .submit-btn:hover {
-      background: #16a34a;
-    }
-
-    .save-score-btn {
-      background: #006666;
-      color: white;
-      border: 1px solid var(--border);
-      padding: 0.4rem 0.8rem;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .save-score-btn:hover {
-      background: var(--accent);
-      color: #ffffff;
+    th {
+      background-color: #2a2a2a;
+      color: var(--gold);
     }
   </style>
-  // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBvL2K8R82qk3fG4EEKZ6sOIiieLcCKckA",
-  authDomain: "haal-fc862.firebaseapp.com",
-  projectId: "haal-fc862",
-  storageBucket: "haal-fc862.firebasestorage.app",
-  messagingSenderId: "1077392905739",
-  appId: "1:1077392905739:web:cc047fae886356663fd90e",
-  measurementId: "G-P99RVN1XBF"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-</script>
 </head>
 <body>
-  <!-- Place inside <head> -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, getDoc, collection, getDocs, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBvL2K8R82qk3fG4EEKZ6sOIiieLcCKckA",
-    authDomain: "haal-fc862.firebaseapp.com",
-    projectId: "haal-fc862",
-    storageBucket: "haal-fc862.firebasestorage.app",
-    messagingSenderId: "1077392905739",
-    appId: "1:1077392905739:web:cc047fae886356663fd90e",
-    measurementId: "G-P99RVN1XBF"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  window.db = db;
-  window.doc = doc;
-  window.setDoc = setDoc;
-  window.getDoc = getDoc;
-  window.collection = collection;
-  window.getDocs = getDocs;
-  window.arrayUnion = arrayUnion;
-  window.serverTimestamp = serverTimestamp;
-</script>
   <h1>🏆 Hellcastle Archery Arena League</h1>
 
-  <!-- 1. League Setup & Selection -->
-<div class="card">
-  <h2>1. Active League Setup</h2>
-  
-  <!-- Select or Create League -->
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-    <div>
-      <div class="form-group">
-        <label for="league-select">Continue Saved League</label>
-        <select id="league-select" onchange="loadSelectedLeague()">
-          <option value="">-- Select Existing League --</option>
-        </select>
+  <!-- 1. Active League Setup -->
+  <div class="card">
+    <h2>1. Active League Setup</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+      <div>
+        <div class="form-group">
+          <label for="league-select">Continue Saved League</label>
+          <select id="league-select" onchange="loadSelectedLeague()">
+            <option value="">-- Select Existing League --</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div class="form-group">
+          <label for="league-name-input">Create New League Name</label>
+          <div class="btn-group">
+            <input type="text" id="league-name-input" placeholder="e.g. Hellcastle Archery League">
+            <button onclick="setActiveLeague()">Set League</button>
+          </div>
+        </div>
       </div>
     </div>
-    <div>
-      <div class="form-group">
-        <label for="league-name-input">Create New League Name</label>
-        <div class="btn-group">
-          <input type="text" id="league-name-input" placeholder="e.g. Hellcastle Archery League">
-          <button onclick="setActiveLeague()">Set League</button>
+
+    <h3 id="current-league-header" style="font-size: 1.1rem; margin-bottom: 1rem;">
+      Current Active League: <strong>Hellcastle Archery League</strong>
+    </h3>
+
+    <hr style="border-color: var(--border); margin-bottom: 1.5rem;">
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+      <div>
+        <div class="form-group">
+          <label for="player-input">Add Combatant / Player Name</label>
+          <div class="btn-group">
+            <input type="text" id="player-input" placeholder="e.g. John Doe" onkeydown="if(event.key==='Enter') addPlayer()">
+            <button onclick="addPlayer()">Add</button>
+          </div>
         </div>
+        <div id="player-tags" class="tag-list"></div>
+      </div>
+      <div>
+        <div class="form-group">
+          <label for="event-input">Add Event Name</label>
+          <div class="btn-group">
+            <input type="text" id="event-input" placeholder="e.g. Robin Hood" onkeydown="if(event.key==='Enter') addEvent()">
+            <button onclick="addEvent()">Add</button>
+          </div>
+        </div>
+        <div id="event-tags" class="tag-list"></div>
       </div>
     </div>
   </div>
 
-  <h3 id="current-league-header" style="color: var(--gold); font-size: 1.1rem; margin-bottom: 1rem;">
-    Current Active League: <em>None Selected</em>
-  </h3>
-
-  <hr style="border-color: var(--border); margin-bottom: 1.5rem;">
-
-  <!-- Add Players and Events -->
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-    <div>
-      <div class="form-group">
-        <label for="player-input">Add Combatant / Player Name</label>
-        <div class="btn-group">
-          <input type="text" id="player-input" placeholder="e.g. John Doe" onkeydown="if(event.key==='Enter') addPlayer()">
-          <button onclick="addPlayer()">Add</button>
-        </div>
-      </div>
-      <div id="player-tags" class="tag-list"></div>
-    </div>
-    <div>
-      <div class="form-group">
-        <label for="event-input">Add Event Name</label>
-        <div class="btn-group">
-          <input type="text" id="event-input" placeholder="e.g. Robin Hood" onkeydown="if(event.key==='Enter') addEvent()">
-          <button onclick="addEvent()">Add</button> </div>
-      </div>
-      <div id="event-tags" class="tag-list"></div>
-    </div>
-  </div>
-</div>
-
-  <!-- 2. Score Entry Section -->
+  <!-- 2. Enter Event Results -->
   <div class="card">
     <h2>2. Enter Event Results</h2>
     <div class="form-group">
@@ -352,74 +211,19 @@ const analytics = getAnalytics(app);
         <option value="">-- Choose Event --</option>
       </select>
     </div>
-
-    <!-- Switch Toggle Option -->
-    <div class="form-group switch-option" id="switch-container" style="display: none;">
-      <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text); margin: 0;">
-        <input type="checkbox" id="is-switch-game" onchange="toggleSwitchMode()" style="width: auto;">
-        <span>Play <strong>"Switch"</strong> to decide event winner?</span>
-      </label>
-    </div>
-
-    <!-- Embedded Switch Engine Panel -->
-    <div id="switch-engine-container" style="display: none; background: #003333; padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1rem;">
-      <h3>🎮 Switch Tournament Config</h3>
-      
-      <div id="switch-setup-panel">
-        <div class="mode-selection">
-          <button class="mode-btn active" id="singles-btn" onclick="setSwitchMode('singles')">Singles (1v1)</button>
-          <button class="mode-btn" id="doubles-btn" onclick="setSwitchMode('doubles')">Doubles (2v2)</button>
-        </div>
-        <div class="form-group">
-          <label for="rounds-select">Rounds to Play:</label>
-          <select id="rounds-select"></select>
-        </div>
-        <button class="action-btn" onclick="startSwitchEvent()">Start Switch Event</button>
-      </div>
-
-      <!-- Active Switch Tournament View -->
-      <div id="switch-active-panel" style="display: none;">
-        <h4 id="switch-round-header" style="color: #e9d5ff; margin-bottom: 1rem;">Round 1 Matchups</h4>
-        <div id="switch-match-list"></div>
-        <button class="action-btn submit-btn" id="switch-next-round-btn" onclick="handleSwitchNextRound()" style="display: none;">Generate Next Round</button>
-        
-        <div style="margin-top: 1.5rem;">
-          <h4>Current Switch Standings</h4>
-          <table>
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Player</th>
-                <th>Wins</th>
-                <th>Points</th>
-              </tr>
-            </thead>
-            <tbody id="switch-leaderboard-body"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Standard Scoring Rule -->
-    <div class="form-group" id="scoring-type-container" style="display: none;">
-      <label for="score-type">Scoring Rule</label>
+    <div class="form-group">
+      <label for="score-type">Scoring Metric</label>
       <select id="score-type">
-        <option value="high">Higher Score Wins (e.g., Archery, Basketball)</option>
-        <option value="low">Lower Score/Time Wins (e.g., Running, Golf)</option>
+        <option value="high">High Score Wins</option>
+        <option value="low">Low Score Wins</option>
       </select>
     </div>
-
-    <!-- Score Inputs Grid -->
-    <div id="score-inputs" class="score-inputs"></div>
-    <button id="submit-scores-btn" style="display: none;" onclick="submitEventScores()">Save & Record Event</button>
+    <div id="score-inputs-container"></div>
   </div>
 
-  <!-- Overall Leaderboard -->
+  <!-- 3. League Standings -->
   <div class="card">
-    <h2>🏆 Hellcastle League Standings</h2>
-    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">
-      Point System: 1st = 25 pts | 2nd = 20 pts | 3rd = 15 pts (Ties awarded highest rank value)
-    </p>
+    <h2>🏆 Standings Leaderboard</h2>
     <table>
       <thead>
         <tr>
@@ -431,695 +235,98 @@ const analytics = getAnalytics(app);
           <th>3rd</th>
         </tr>
       </thead>
-      <tbody id="leaderboard-body">
-        <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No scores recorded yet.</td></tr>
-      </tbody>
+      <tbody id="leaderboard-body"></tbody>
     </table>
   </div>
 
-  <!-- Completed Events Log -->
+  <!-- 4. Completed Events History -->
   <div class="card">
-    <h2>Completed Events</h2>
-    <div id="completed-events-list">
-      <p style="color: var(--text-muted);">No completed events yet.</p>
-    </div>
+    <h2>Completed Events Log</h2>
+    <div id="completed-events-log"></div>
   </div>
 
   <script>
+    // --- Application State ---
     let currentLeagueName = "Hellcastle Archery League";
-
-// Fetch existing leagues from Firebase to populate dropdown
-async function fetchSavedLeagues() {
-  if (!window.db) return;
-  const select = document.getElementById('league-select');
-  select.innerHTML = '<option value="">-- Select Existing League --</option>';
-
-  try {
-    const querySnapshot = await window.getDocs(window.collection(window.db, "leagues"));
-    querySnapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      if (data.leagueName) {
-        const opt = document.createElement('option');
-        opt.value = data.leagueName;
-        opt.textContent = data.leagueName;
-        select.appendChild(opt);
-      }
-    });
-  } catch (err) {
-    console.error("Error fetching leagues:", err);
-  }
-}
-
-// Set active league from the input field
-function setActiveLeague() {
-  const input = document.getElementById('league-name-input');
-  const name = input.value.trim();
-  if (!name) {
-    alert("Please enter a valid league name.");
-    return;
-  }
-  currentLeagueName = name;
-  document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
-  input.value = '';
-}
-
-// Load chosen league data directly from Firestore
-async function loadSelectedLeague() {
-  const select = document.getElementById('league-select');
-  const leagueName = select.value;
-  if (!leagueName) return;
-
-  currentLeagueName = leagueName;
-  document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
-
-  const docId = leagueName.trim().replace(/\s+/g, '_');
-  const leagueRef = window.doc(window.db, "leagues", docId);
-
-  try {
-    const docSnap = await window.getDoc(leagueRef);
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      if (data.completedEvents) {
-        completedEvents.length = 0; // Clear existing local list
-        completedEvents.push(...data.completedEvents);
-
-        // Auto-extract player list from existing recorded games
-        data.completedEvents.forEach(evt => {
-          evt.results.forEach(res => {
-            if (res.name && !players.includes(res.name)) {
-              players.push(res.name);
-            }
-          });
-        });
-
-        renderSetupUI();
-        updateLeaderboard();
-        renderCompletedEvents();
-      }
-    }
-  } catch (err) {
-    console.error("Error loading league data:", err);
-  }
-}
-
-// Updated Firebase Save Helper using active league name
-async function saveEventToFirebase(leagueName, eventData) {
-  if (!window.db) {
-    console.warn("Firebase is not initialized yet.");
-    return;
-  }
-
-  const docId = leagueName.trim().replace(/\s+/g, '_');
-  const leagueRef = window.doc(window.db, "leagues", docId);
-
-  try {
-    await window.setDoc(leagueRef, {
-      leagueName: leagueName,
-      lastUpdated: window.serverTimestamp(),
-      completedEvents: window.arrayUnion(eventData)
-    }, { merge: true });
-
-    console.log(`Successfully saved event to league: ${leagueName}`);
-    fetchSavedLeagues(); // Refresh dropdown menu options
-  } catch (error) {
-    console.error("Error saving event to Firebase: ", error);
-  }
-}
-
-// Ensure saved leagues load when page opens
-window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(fetchSavedLeagues, 1000);
-});
-    async function saveEventToFirebase(leagueName, eventData) {
-  if (!window.db) {
-    console.warn("Firebase is not initialized yet.");
-    return;
-  }
-
-  // Sanitize document ID (replace special characters/spaces if needed)
-  const docId = leagueName.trim().replace(/\s+/g, '_');
-  const leagueRef = window.doc(window.db, "leagues", docId);
-
-  try {
-    await window.setDoc(leagueRef, {
-      leagueName: leagueName,
-      lastUpdated: window.serverTimestamp(),
-      completedEvents: window.arrayUnion(eventData)
-    }, { merge: true });
-
-    console.log(`Successfully saved event to league: ${leagueName}`);
-  } catch (error) {
-    console.error("Error saving event to Firebase: ", error);
-  }
-}
     const players = [];
     const events = [];
     const completedEvents = [];
 
-    // Global Points and Medals Maps
-    const pointsMap = { 1: 25, 2: 20, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 3, 10: 2 };
+    const pointsMap = { 1: 25, 2: 20, 3: 15 };
     const medalsMap = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
-    // Switch Tournament State Variables
-    let switchMode = 'singles';
-    let switchMatchHistory = new Set();
-    let switchMatches = [];
-    let switchCurrentRound = 1;
-    let switchTotalRounds = 5;
-    let switchStats = {};
+    // --- Firebase League Helpers ---
+    async function fetchSavedLeagues() {
+      if (!window.db) return;
+      const select = document.getElementById('league-select');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- Select Existing League --</option>';
 
-    // Initialize Switch Rounds Dropdown Options
-    const roundsSelect = document.getElementById('rounds-select');
-    for (let i = 1; i <= 20; i++) {
-      const opt = document.createElement('option');
-      opt.value = i;
-      opt.textContent = i;
-      if (i === 5) opt.selected = true;
-      roundsSelect.appendChild(opt);
-    }
-
-    function addPlayer() {
-      const input = document.getElementById('player-input');
-      const name = input.value.trim();
-      if (name && !players.includes(name)) {
-        players.push(name);
-        input.value = '';
-        renderSetupUI();
-      }
-    }
-
-    function addEvent() {
-      const input = document.getElementById('event-input');
-      const name = input.value.trim();
-      if (name && !events.includes(name)) {
-        events.push(name);
-        input.value = '';
-        renderSetupUI();
-      }
-    }
-
-    function renderSetupUI() {
-      document.getElementById('player-tags').innerHTML = players.map(p => `<span class="tag">${p}</span>`).join('');
-      document.getElementById('event-tags').innerHTML = events.map(e => `<span class="tag">${e}</span>`).join('');
-      
-      const select = document.getElementById('event-select');
-      select.innerHTML = '<option value="">-- Choose Event --</option>' + events.map(e => `<option value="${e}">${e}</option>`).join('');
-      
-      renderScoreInputs();
-    }
-
-    function renderScoreInputs() {
-      const selectedEvent = document.getElementById('event-select').value;
-      const container = document.getElementById('score-inputs');
-      const submitBtn = document.getElementById('submit-scores-btn');
-      const scoringTypeContainer = document.getElementById('scoring-type-container');
-      const switchContainer = document.getElementById('switch-container');
-      const switchEngineContainer = document.getElementById('switch-engine-container');
-
-      document.getElementById('is-switch-game').checked = false;
-      switchEngineContainer.style.display = 'none';
-
-      if (!selectedEvent || players.length === 0) {
-        container.innerHTML = '';
-        submitBtn.style.display = 'none';
-        scoringTypeContainer.style.display = 'none';
-        switchContainer.style.display = 'none';
-        return;
-      }
-
-      scoringTypeContainer.style.display = 'block';
-      switchContainer.style.display = 'block';
-      submitBtn.style.display = 'block';
-      container.style.display = 'grid';
-
-      container.innerHTML = players.map(player => `
-        <div class="score-input-card">
-          <label>${player}</label>
-          <input type="number" step="any" data-player="${player}" class="player-score-field" placeholder="Enter score">
-        </div>
-      `).join('');
-    }
-
-    function toggleSwitchMode() {
-      const isSwitch = document.getElementById('is-switch-game').checked;
-      const scoreInputs = document.getElementById('score-inputs');
-      const scoringTypeContainer = document.getElementById('scoring-type-container');
-      const switchEngineContainer = document.getElementById('switch-engine-container');
-      const submitBtn = document.getElementById('submit-scores-btn');
-
-      if (isSwitch) {
-        scoreInputs.style.display = 'none';
-        scoringTypeContainer.style.display = 'none';
-        submitBtn.style.display = 'none';
-        switchEngineContainer.style.display = 'block';
-        document.getElementById('switch-setup-panel').style.display = 'block';
-        document.getElementById('switch-active-panel').style.display = 'none';
-      } else {
-        scoreInputs.style.display = 'grid';
-        scoringTypeContainer.style.display = 'block';
-        submitBtn.style.display = 'block';
-        switchEngineContainer.style.display = 'none';
-      }
-    }
-
-    /* Embedded Switch Engine Functions */
-    function setSwitchMode(selectedMode) {
-      switchMode = selectedMode;
-      document.getElementById('singles-btn').classList.toggle('active', switchMode === 'singles');
-      document.getElementById('doubles-btn').classList.toggle('active', switchMode === 'doubles');
-    }
-
-    function shuffle(array) {
-      return [...array].sort(() => Math.random() - 0.5);
-    }
-
-    function getMatchKey(teamA, teamB) {
-      const a = [...teamA].sort().join('&');
-      const b = [...teamB].sort().join('&');
-      return [a, b].sort().join(' VS ');
-    }
-
-    function resetSwitchStats() {
-      switchMatchHistory.clear();
-      switchCurrentRound = 1;
-      switchStats = {};
-      players.forEach(p => {
-        switchStats[p] = { wins: 0, points: 0 };
-      });
-    }
-
-    function startSwitchEvent() {
-      const minPlayers = switchMode === 'singles' ? 2 : 4;
-      if (players.length < minPlayers) {
-        alert(`You need at least ${minPlayers} players to run a ${switchMode} Switch tournament.`);
-        return;
-      }
-      switchTotalRounds = parseInt(document.getElementById('rounds-select').value, 10);
-      resetSwitchStats();
-      document.getElementById('switch-setup-panel').style.display = 'none';
-      document.getElementById('switch-active-panel').style.display = 'block';
-      renderSwitchLeaderboard();
-      generateSwitchNextRound();
-    }
-
-    function generateSwitchNextRound() {
-      const teamSize = switchMode === 'singles' ? 1 : 2;
-      let availablePlayers = shuffle(players);
-      let teams = [];
-
-      while (availablePlayers.length >= teamSize) {
-        teams.push(availablePlayers.splice(0, teamSize));
-      }
-
-      let possiblePairs = [];
-      for (let i = 0; i < teams.length; i++) {
-        for (let j = i + 1; j < teams.length; j++) {
-          possiblePairs.push([teams[i], teams[j]]);
-        }
-      }
-
-      let freshPairs = possiblePairs.filter(pair => !switchMatchHistory.has(getMatchKey(pair[0], pair[1])));
-
-      if (freshPairs.length === 0) {
-        switchMatchHistory.clear();
-        freshPairs = possiblePairs;
-      }
-
-      let matches = [];
-      let usedTeams = new Set();
-      freshPairs = shuffle(freshPairs);
-
-      for (let [teamA, teamB] of freshPairs) {
-        const keyA = teamA.join(',');
-        const keyB = teamB.join(',');
-        if (!usedTeams.has(keyA) && !usedTeams.has(keyB)) {
-          matches.push({ teamA, teamB, scoreA: '', scoreB: '', submitted: false });
-          usedTeams.add(keyA);
-          usedTeams.add(keyB);
-          switchMatchHistory.add(getMatchKey(teamA, teamB));
-        }
-      }
-
-      switchMatches = matches;
-      renderSwitchMatches();
-    }
-
-    function submitSwitchScore(matchIndex) {
-      const inputA = document.getElementById(`switch-score-a-${matchIndex}`);
-      const inputB = document.getElementById(`switch-score-b-${matchIndex}`);
-      const valA = parseInt(inputA.value, 10);
-      const valB = parseInt(inputB.value, 10);
-
-      if (isNaN(valA) || isNaN(valB)) {
-        alert("Please enter numeric scores for both teams.");
-        return;
-      }
-
-      const match = switchMatches[matchIndex];
-      match.scoreA = valA;
-      match.scoreB = valB;
-      match.submitted = true;
-
-      match.teamA.forEach(p => {
-        switchStats[p].points += valA;
-        if (valA > valB) switchStats[p].wins += 1;
-      });
-
-      match.teamB.forEach(p => {
-        switchStats[p].points += valB;
-        if (valB > valA) switchStats[p].wins += 1;
-      });
-
-      renderSwitchLeaderboard();
-      renderSwitchMatches();
-    }
-
-    function renderSwitchMatches() {
-      const list = document.getElementById('switch-match-list');
-      const nextBtn = document.getElementById('switch-next-round-btn');
-
-      document.getElementById('switch-round-header').innerText = `Round ${switchCurrentRound} of ${switchTotalRounds} Matchups`;
-
-      list.innerHTML = switchMatches.map((m, index) => `
-        <div class="match-card ${m.submitted ? 'completed' : ''}">
-          <div class="team-row">
-            <span>${m.teamA.join(' & ')}</span>
-            <input type="number" id="switch-score-a-${index}" class="score-input" value="${m.scoreA}" ${m.submitted ? 'disabled' : ''}>
-          </div>
-          <div class="vs">VS</div>
-          <div class="team-row">
-            <span>${m.teamB.join(' & ')}</span>
-            <input type="number" id="switch-score-b-${index}" class="score-input" value="${m.scoreB}" ${m.submitted ? 'disabled' : ''}>
-          </div>
-          ${!m.submitted ? `<button class="save-score-btn" onclick="submitSwitchScore(${index})">Save Score</button>` : '<span style="color:var(--success); font-weight:bold; font-size:0.85rem;">✓ Finalized</span>'}
-        </div>
-      `).join('');
-
-      const allSubmitted = switchMatches.length > 0 && switchMatches.every(m => m.submitted);
-      nextBtn.style.display = allSubmitted ? 'block' : 'none';
-
-      if (allSubmitted && switchCurrentRound === switchTotalRounds) {
-        nextBtn.innerText = 'Finalize Switch Event & Record Leaderboard';
-      } else {
-        nextBtn.innerText = 'Generate Next Round';
-      }
-    }
-
-    function renderSwitchLeaderboard() {
-      const body = document.getElementById('switch-leaderboard-body');
-      const sorted = getSortedSwitchStandings();
-
-      body.innerHTML = sorted.map((p, idx) => `
-        <tr>
-          <td>#${idx + 1}</td>
-          <td><strong>${p.name}</strong></td>
-          <td>${p.wins}</td>
-          <td>${p.points}</td>
-        </tr>
-      `).join('');
-    }
-
-    function getSortedSwitchStandings() {
-      return Object.keys(switchStats)
-        .map(p => ({ name: p, ...switchStats[p] }))
-        .sort((a, b) => b.wins - a.wins || b.points - a.points);
-    }
-
-    function handleSwitchNextRound() {
-      if (switchCurrentRound < switchTotalRounds) {
-        switchCurrentRound++;
-        generateSwitchNextRound();
-      } else {
-        finalizeSwitchEvent();
-      }
-    }
-
-    function finalizeSwitchEvent() {
-  const eventName = document.getElementById('event-select').value;
-  const sorted = getSortedSwitchStandings();
-  let currentRank = 1;
-
-  const processedResults = sorted.map((entry, index, array) => {
-    if (index > 0 && (entry.wins !== array[index - 1].wins || entry.points !== array[index - 1].points)) {
-      currentRank = index + 1;
-    }
-    const points = pointsMap[currentRank] !== undefined ? pointsMap[currentRank] : 1;
-    return {
-      name: entry.name,
-      score: `${entry.wins} Wins (${entry.points} pts)`,
-      rank: currentRank,
-      medal: medalsMap[currentRank] || '',
-      points
-    };
-  });
-
-  const eventPayload = {
-    eventName: `${eventName} (Switch)`,
-    timestamp: new Date().toISOString(),
-    results: processedResults
-  };
-
-  completedEvents.push(eventPayload);
-  updateLeaderboard();
-  renderCompletedEvents();
-
-  // Save to Firestore under the League Name
-  saveEventToFirebase("Hellcastle Archery League", eventPayload);
-
-  document.getElementById('event-select').value = '';
-  renderScoreInputs();
-}
-    /* Standard Score Entry Submit with Tied-Rank Scoring */
-    function submitEventScores() {
-  const eventName = document.getElementById('event-select').value;
-  const isHighWins = document.getElementById('score-type').value === 'high';
-  const scoreInputs = document.querySelectorAll('.player-score-field');
-  let eventScores = [];
-
-  scoreInputs.forEach(input => {
-    const value = parseFloat(input.value);
-    if (!isNaN(value)) {
-      eventScores.push({ name: input.dataset.player, score: value });
-    }
-  });
-
-  if (eventScores.length === 0) {
-    alert('Please enter scores for at least one athlete.');
-    return;
-  }
-
-  eventScores.sort((a, b) => isHighWins ? b.score - a.score : a.score - b.score);
-  let currentRank = 1;
-
-  const processedResults = eventScores.map((entry, index, array) => {
-    if (index > 0 && entry.score !== array[index - 1].score) {
-      currentRank = index + 1;
-    }
-    const points = pointsMap[currentRank] !== undefined ? pointsMap[currentRank] : 1;
-    return { ...entry, rank: currentRank, medal: medalsMap[currentRank] || '', points };
-  });
-
-  const eventPayload = {
-    eventName,
-    timestamp: new Date().toISOString(),
-    results: processedResults
-  };
-
-  completedEvents.push(eventPayload);
-  updateLeaderboard();
-  renderCompletedEvents();
-
-  // Save to Firestore under the League Name
-  saveEventToFirebase("Hellcastle Archery League", eventPayload);
-
-  document.getElementById('event-select').value = '';
-  renderScoreInputs();
-}
-    /* Update Overall Leaderboard with Shared Ranks */
-    function updateLeaderboard() {
-      const standings = {};
-      players.forEach(p => {
-        standings[p] = { points: 0, gold: 0, silver: 0, bronze: 0 };
-      });
-
-      completedEvents.forEach(evt => {
-        evt.results.forEach(res => {
-          if (!standings[res.name]) {
-            standings[res.name] = { points: 0, gold: 0, silver: 0, bronze: 0 };
+      try {
+        const querySnapshot = await window.getDocs(window.collection(window.db, "leagues"));
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data.leagueName) {
+            const opt = document.createElement('option');
+            opt.value = data.leagueName;
+            opt.textContent = data.leagueName;
+            select.appendChild(opt);
           }
-          standings[res.name].points += res.points;
-          if (res.rank === 1) standings[res.name].gold++;
-          if (res.rank === 2) standings[res.name].silver++;
-          if (res.rank === 3) standings[res.name].bronze++;
         });
-      });
-
-      const sorted = Object.keys(standings)
-        .map(name => ({ name, ...standings[name] }))
-        .sort((a, b) => {
-          if (b.points !== a.points) return b.points - a.points;
-          if (b.gold !== a.gold) return b.gold - a.gold;
-          if (b.silver !== a.silver) return b.silver - a.silver;
-          return b.bronze - a.bronze;
-        });
-
-      const tbody = document.getElementById('leaderboard-body');
-      let currentDisplayRank = 1;
-
-      tbody.innerHTML = sorted.map((player, idx, array) => {
-        const isTiedWithPrev = idx > 0 &&
-          player.points === array[idx - 1].points &&
-          player.gold === array[idx - 1].gold &&
-          player.silver === array[idx - 1].silver &&
-          player.bronze === array[idx - 1].bronze;
-
-        if (!isTiedWithPrev) {
-          currentDisplayRank = idx + 1;
-        }
-
-        return `
-          <tr>
-            <td><strong>#${currentDisplayRank}</strong></td>
-            <td>${player.name}</td>
-            <td><strong>${player.points}</strong></td>
-            <td>${player.gold}</td>
-            <td>${player.silver}</td>
-            <td>${player.bronze}</td>
-          </tr>
-        `;
-      }).join('');
+      } catch (err) {
+        console.error("Error fetching leagues:", err);
+      }
     }
 
-    function renderCompletedEvents() {
-      const container = document.getElementById('completed-events-list');
-      if (completedEvents.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-muted);">No completed events yet.</p>';
+    function setActiveLeague() {
+      const input = document.getElementById('league-name-input');
+      const name = input.value.trim();
+      if (!name) {
+        alert("Please enter a valid league name.");
         return;
       }
-
-      container.innerHTML = completedEvents.map(evt => `
-        <div style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
-          <h3 style="color: #e9d5ff;">${evt.eventName}</h3>
-          <ul>
-            ${evt.results.map(r => `
-              <li style="list-style: none; margin-bottom: 0.25rem;">
-                ${r.medal ? r.medal : '•'} <strong>${r.name}</strong> - Result: ${r.score} (${r.points} pts)
-              </li>
-            `).join('')}
-          </ul>
-        </div>
-      `).join('');
+      currentLeagueName = name;
+      document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
+      input.value = '';
     }
-    // ==========================================
-  // STEP 3: FIREBASE SAVE & LEAGUE MANAGEMENT
-  // ==========================================
 
-  let currentLeagueName = "Hellcastle Archery League";
+    async function loadSelectedLeague() {
+      const select = document.getElementById('league-select');
+      const leagueName = select.value;
+      if (!leagueName) return;
 
-  // Fetch existing leagues from Firebase to populate dropdown
-  async function fetchSavedLeagues() {
-    if (!window.db) return;
-    const select = document.getElementById('league-select');
-    if (!select) return;
-    select.innerHTML = '<option value="">-- Select Existing League --</option>';
+      currentLeagueName = leagueName;
+      document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
 
-    try {
-      const querySnapshot = await window.getDocs(window.collection(window.db, "leagues"));
-      querySnapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        if (data.leagueName) {
-          const opt = document.createElement('option');
-          opt.value = data.leagueName;
-          opt.textContent = data.leagueName;
-          select.appendChild(opt);
-        }
-      });
-    } catch (err) {
-      console.error("Error fetching leagues:", err);
-    }
-  }
+      const docId = leagueName.trim().replace(/\s+/g, '_');
+      const leagueRef = window.doc(window.db, "leagues", docId);
 
-  // Set active league from the text input field
-  function setActiveLeague() {
-    const input = document.getElementById('league-name-input');
-    const name = input.value.trim();
-    if (!name) {
-      alert("Please enter a valid league name.");
-      return;
-    }
-    currentLeagueName = name;
-    document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
-    input.value = '';
-  }
+      try {
+        const docSnap = await window.getDoc(leagueRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.completedEvents) {
+            completedEvents.length = 0;
+            completedEvents.push(...data.completedEvents);
 
-  // Load chosen league data directly from Firestore
-  async function loadSelectedLeague() {
-    const select = document.getElementById('league-select');
-    const leagueName = select.value;
-    if (!leagueName) return;
-
-    currentLeagueName = leagueName;
-    document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
-
-    const docId = leagueName.trim().replace(/\s+/g, '_');
-    const leagueRef = window.doc(window.db, "leagues", docId);
-
-    try {
-      const docSnap = await window.getDoc(leagueRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.completedEvents) {
-          completedEvents.length = 0; // Clear existing local list
-          completedEvents.push(...data.completedEvents);
-
-          // Auto-extract player list from existing recorded games
-          data.completedEvents.forEach(evt => {
-            evt.results.forEach(res => {
-              if (res.name && !players.includes(res.name)) {
-                players.push(res.name);
-              }
+            // Populate player list dynamically from historical data
+            data.completedEvents.forEach(evt => {
+              evt.results.forEach(res => {
+                if (res.name && !players.includes(res.name)) {
+                  players.push(res.name);
+                }
+              });
             });
-          });
 
-          if (typeof renderSetupUI === 'function') renderSetupUI();
-          if (typeof updateLeaderboard === 'function') updateLeaderboard();
-          if (typeof renderCompletedEvents === 'function') renderCompletedEvents();
+            renderSetupUI();
+            updateLeaderboard();
+            renderCompletedEvents();
+          }
         }
+      } catch (err) {
+        console.error("Error loading league data:", err);
       }
-    } catch (err) {
-      console.error("Error loading league data:", err);
-    }
-  }
-
-  // Helper function to save game results to Firestore
-  async function saveEventToFirebase(leagueName, eventData) {
-    if (!window.db) {
-      console.warn("Firebase is not initialized yet.");
-      return;
     }
 
-    const docId = leagueName.trim().replace(/\s+/g, '_');
-    const leagueRef = window.doc(window.db, "leagues", docId);
-
-    try {
-      await window.setDoc(leagueRef, {
-        leagueName: leagueName,
-        lastUpdated: window.serverTimestamp(),
-        completedEvents: window.arrayUnion(eventData)
-      }, { merge: true });
-
-      console.log(`Successfully saved event to league: ${leagueName}`);
-      fetchSavedLeagues(); // Refresh dropdown list
-    } catch (error) {
-      console.error("Error saving event to Firebase: ", error);
-    }
-  }
-
-  // Load saved leagues when the DOM is ready
-  window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(fetchSavedLeagues, 1000);
-  });
-</script>
-  </script>
-</body>
-</html>
+    async function saveEventToFirebase(leagueName, eventData) {
+      if (!window.db)
