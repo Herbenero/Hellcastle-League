@@ -4,210 +4,256 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🏆 Hellcastle Archery Arena League</title>
-  
   <style>
     :root {
-      --bg: #121212;
+      --bg-color: #121212;
       --card-bg: #1e1e1e;
-      --text: #e0e0e0;
-      --gold: #ffd700;
-      --border: #333;
-      --accent: #4caf50;
+      --accent-color: #4CAF50;
       --accent-hover: #45a049;
+      --text-color: #ffffff;
+      --text-muted: #b0b0b0;
+      --border-color: #333333;
+      --input-bg: #2a2a2a;
+      --gold: #ffd700;
+      --silver: #c0c0c0;
+      --bronze: #cd7f32;
     }
+
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
+      background-color: var(--bg-color);
+      color: var(--text-color);
       margin: 0;
       padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+    }
+
     h1, h2, h3 {
       text-align: center;
       color: var(--gold);
     }
+
     .card {
       background-color: var(--card-bg);
       border-radius: 8px;
       padding: 20px;
       margin-bottom: 20px;
-      border: 1px solid var(--border);
-      max-width: 900px;
-      margin-left: auto;
-      margin-right: auto;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      border: 1px solid var(--border-color);
     }
-    .form-group {
+
+    .form-row {
+      display: flex;
+      gap: 15px;
       margin-bottom: 15px;
+      flex-wrap: wrap;
     }
+
+    .form-group {
+      flex: 1;
+      min-width: 200px;
+      display: flex;
+      flex-direction: column;
+    }
+
     label {
-      display: block;
+      font-size: 0.9em;
       margin-bottom: 5px;
-      font-weight: bold;
+      color: var(--text-muted);
     }
-    input[type="text"], input[type="number"], select {
-      width: 100%;
+
+    input, select, button {
       padding: 10px;
       border-radius: 4px;
-      border: 1px solid var(--border);
-      background-color: #2a2a2a;
-      color: #fff;
-      box-sizing: border-box;
+      border: 1px solid var(--border-color);
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      font-size: 1em;
     }
-    .btn-group {
-      display: flex;
-      gap: 10px;
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent-color);
     }
+
     button {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 4px;
-      background-color: var(--accent);
+      background-color: var(--accent-color);
       color: white;
-      cursor: pointer;
       font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
     }
+
     button:hover {
       background-color: var(--accent-hover);
     }
-    .tag-list {
+
+    .tags {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
       margin-top: 10px;
     }
+
     .tag {
-      background: #333;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
       padding: 5px 10px;
       border-radius: 15px;
-      font-size: 0.9em;
+      font-size: 0.85em;
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
     }
+
     .tag button {
-      background: transparent;
+      background: none;
+      border: none;
       color: #ff5555;
       padding: 0;
       font-size: 1.1em;
+      cursor: pointer;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
+      margin-top: 10px;
     }
+
     th, td {
-      border: 1px solid var(--border);
-      padding: 10px;
-      text-align: center;
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
     }
+
     th {
-      background-color: #2a2a2a;
+      background-color: var(--input-bg);
       color: var(--gold);
+    }
+
+    tr:nth-child(1) td:first-child { color: var(--gold); font-weight: bold; }
+    tr:nth-child(2) td:first-child { color: var(--silver); font-weight: bold; }
+    tr:nth-child(3) td:first-child { color: var(--bronze); font-weight: bold; }
+
+    #current-league-header {
+      text-align: center;
+      font-size: 1.1em;
+      color: var(--accent-color);
+      margin-top: -10px;
+      margin-bottom: 15px;
     }
   </style>
 </head>
 <body>
 
-  <h1>🏆 Hellcastle Archery Arena League</h1>
+  <div class="container">
+    <h1>🏆 Hellcastle Archery Arena League</h1>
 
-  <!-- 1. Active League Setup -->
-  <div class="card">
-    <h2>1. Active League Setup</h2>
-    
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-      <div>
+    <!-- 1. League & Setup Management -->
+    <div class="card">
+      <h2>1. Active League Setup</h2>
+      
+      <div class="form-row">
         <div class="form-group">
           <label for="league-select">Continue Saved League</label>
           <select id="league-select">
             <option value="">-- Select Existing League --</option>
           </select>
         </div>
-      </div>
-      <div>
         <div class="form-group">
           <label for="league-name-input">Create New League Name</label>
-          <div class="btn-group">
-            <input type="text" id="league-name-input" placeholder="e.g. Hellcastle Archery League">
-            <button id="btn-set-league">Set League</button>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="league-name-input" placeholder="e.g. HAAL #1" style="flex: 1;">
+            <button onclick="setActiveLeague()">Set League</button>
           </div>
         </div>
       </div>
-    </div>
 
-    <h3 id="current-league-header" style="font-size: 1.1rem; margin-bottom: 1rem;">
-      Current Active League: <strong>Hellcastle Archery League</strong>
-    </h3>
+      <div id="current-league-header">Current Active League: <strong>Hellcastle Archery League</strong></div>
 
-    <hr style="border-color: var(--border); margin-bottom: 1.5rem;">
+      <hr style="border-color: var(--border-color); margin: 20px 0;">
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-      <div>
+      <div class="form-row">
         <div class="form-group">
-          <label for="player-input">Add Combatant / Player Name</label>
-          <div class="btn-group">
-            <input type="text" id="player-input" placeholder="e.g. John Doe">
-            <button id="btn-add-player">Add</button>
+          <label>Add Combatant / Player Name</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="player-input" placeholder="Enter player name" style="flex: 1;">
+            <button onclick="addPlayer()">Add</button>
           </div>
+          <div id="player-tags" class="tags"></div>
         </div>
-        <div id="player-tags" class="tag-list"></div>
-      </div>
-      <div>
+
         <div class="form-group">
-          <label for="event-input">Add Event Name</label>
-          <div class="btn-group">
-            <input type="text" id="event-input" placeholder="e.g. Robin Hood">
-            <button id="btn-add-event">Add</button>
+          <label>Add Event Name</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="event-input" placeholder="Enter event name" style="flex: 1;">
+            <button onclick="addEvent()">Add</button>
           </div>
+          <div id="event-tags" class="tags"></div>
         </div>
-        <div id="event-tags" class="tag-list"></div>
       </div>
     </div>
-  </div>
 
-  <!-- 2. Enter Event Results -->
-  <div class="card">
-    <h2>2. Enter Event Results</h2>
-    <div class="form-group">
-      <label for="event-select">Select Event</label>
-      <select id="event-select">
-        <option value="">-- Choose Event --</option>
-      </select>
+    <!-- 2. Event Scoring -->
+    <div class="card">
+      <h2>2. Enter Event Results</h2>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="event-select">Select Event</label>
+          <select id="event-select">
+            <option value="">-- Choose Event --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="score-type">Scoring Metric</label>
+          <select id="score-type">
+            <option value="high">High Score Wins</option>
+            <option value="low">Low Score Wins (Time/Penalty)</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="score-inputs-container"></div>
     </div>
-    <div class="form-group">
-      <label for="score-type">Scoring Metric</label>
-      <select id="score-type">
-        <option value="high">High Score Wins</option>
-        <option value="low">Low Score Wins</option>
-      </select>
+
+    <!-- 3. Leaderboard -->
+    <div class="card">
+      <h2>🏆 Standings Leaderboard</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Athlete</th>
+            <th>Total Points</th>
+            <th>🥇 Golds</th>
+            <th>🥈 Silvers</th>
+            <th>🥉 Bronzes</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <!-- Standings populated dynamically -->
+        </tbody>
+      </table>
     </div>
-    <div id="score-inputs-container"></div>
+
+    <!-- 4. Completed Event Log -->
+    <div class="card">
+      <h2>📜 Event Log</h2>
+      <div id="completed-events-log"></div>
+    </div>
   </div>
 
-  <!-- 3. League Standings -->
-  <div class="card">
-    <h2>🏆 Standings Leaderboard</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Rank</th>
-          <th>Athlete</th>
-          <th>Total Points</th>
-          <th>1st</th>
-          <th>2nd</th>
-          <th>3rd</th>
-        </tr>
-      </thead>
-      <tbody id="leaderboard-body"></tbody>
-    </table>
-  </div>
-
-  <!-- 4. Completed Events History -->
-  <div class="card">
-    <h2>Completed Events Log</h2>
-    <div id="completed-events-log"></div>
-  </div>
-
-  <!-- Main Application Script (Firebase Modular) -->
+  <!-- Main Application Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { 
@@ -222,310 +268,4 @@
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyBvL2K8R82qk3fG4EEKZ6sOIiieLcCKckA",
-      authDomain: "haal-fc862.firebaseapp.com",
-      projectId: "haal-fc862",
-      storageBucket: "haal-fc862.firebasestorage.app",
-      messagingSenderId: "1077392905739",
-      appId: "1:1077392905739:web:cc047fae886356663fd90e",
-      measurementId: "G-P99RVN1XBF"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // Application State
-    let currentLeagueName = "Hellcastle Archery League";
-    const players = [];
-    const events = [];
-    const completedEvents = [];
-
-    const pointsMap = { 1: 25, 2: 20, 3: 15 };
-    const medalsMap = { 1: '🥇', 2: '🥈', 3: '🥉' };
-
-    // --- Firebase League Helpers ---
-    async function fetchSavedLeagues() {
-      const select = document.getElementById('league-select');
-      if (!select) return;
-      
-      select.innerHTML = '<option value="">-- Select Existing League --</option>';
-
-      try {
-        const querySnapshot = await getDocs(collection(db, "leagues"));
-        querySnapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          if (data.leagueName) {
-            const opt = document.createElement('option');
-            opt.value = data.leagueName;
-            opt.textContent = data.leagueName;
-            if (data.leagueName === currentLeagueName) {
-              opt.selected = true;
-            }
-            select.appendChild(opt);
-          }
-        });
-      } catch (err) {
-        console.error("Error fetching leagues:", err);
-      }
-    }
-
-    async function setActiveLeague() {
-      const input = document.getElementById('league-name-input');
-      const name = input.value.trim();
-      if (!name) {
-        alert("Please enter a valid league name.");
-        return;
-      }
-
-      currentLeagueName = name;
-      document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
-      
-      players.length = 0;
-      events.length = 0;
-      completedEvents.length = 0;
-
-      renderSetupUI();
-      updateLeaderboard();
-      renderCompletedEvents();
-
-      const docId = currentLeagueName.trim().replace(/\s+/g, '_');
-      const leagueRef = doc(db, "leagues", docId);
-
-      try {
-        await setDoc(leagueRef, {
-          leagueName: currentLeagueName,
-          lastUpdated: serverTimestamp(),
-          completedEvents: []
-        }, { merge: true });
-
-        await fetchSavedLeagues();
-        input.value = '';
-      } catch (err) {
-        console.error("Error creating league in Firebase:", err);
-      }
-    }
-
-    async function loadSelectedLeague() {
-      const select = document.getElementById('league-select');
-      const leagueName = select.value;
-      if (!leagueName) return;
-
-      currentLeagueName = leagueName;
-      document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
-
-      const docId = leagueName.trim().replace(/\s+/g, '_');
-      const leagueRef = doc(db, "leagues", docId);
-
-      try {
-        const docSnap = await getDoc(leagueRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          
-          completedEvents.length = 0;
-          players.length = 0;
-
-          if (data.completedEvents) {
-            completedEvents.push(...data.completedEvents);
-
-            data.completedEvents.forEach(evt => {
-              evt.results.forEach(res => {
-                if (res.name && !players.includes(res.name)) {
-                  players.push(res.name);
-                }
-              });
-            });
-          }
-
-          renderSetupUI();
-          updateLeaderboard();
-          renderCompletedEvents();
-        }
-      } catch (err) {
-        console.error("Error loading league data:", err);
-      }
-    }
-
-    async function saveEventToFirebase(leagueName, eventData) {
-      const docId = leagueName.trim().replace(/\s+/g, '_');
-      const leagueRef = doc(db, "leagues", docId);
-
-      try {
-        await setDoc(leagueRef, {
-          leagueName: leagueName,
-          lastUpdated: serverTimestamp(),
-          completedEvents: arrayUnion(eventData)
-        }, { merge: true });
-
-        console.log(`Successfully saved event to league: ${leagueName}`);
-        fetchSavedLeagues();
-      } catch (error) {
-        console.error("Error saving event to Firebase: ", error);
-      }
-    }
-
-    // --- Setup UI Handlers ---
-    function addPlayer() {
-      const input = document.getElementById('player-input');
-      const name = input.value.trim();
-      if (name && !players.includes(name)) {
-        players.push(name);
-        input.value = '';
-        renderSetupUI();
-      }
-    }
-
-    function removePlayer(name) {
-      const idx = players.indexOf(name);
-      if (idx > -1) {
-        players.splice(idx, 1);
-        renderSetupUI();
-      }
-    }
-
-    function addEvent() {
-      const input = document.getElementById('event-input');
-      const name = input.value.trim();
-      if (name && !events.includes(name)) {
-        events.push(name);
-        input.value = '';
-        renderSetupUI();
-      }
-    }
-
-    function removeEvent(name) {
-      const idx = events.indexOf(name);
-      if (idx > -1) {
-        events.splice(idx, 1);
-        renderSetupUI();
-      }
-    }
-
-    function renderSetupUI() {
-      const playerTags = document.getElementById('player-tags');
-      if (playerTags) {
-        playerTags.innerHTML = players.map(p => `
-          <span class="tag">${p} <button data-player="${p}" class="btn-remove-player">&times;</button></span>
-        `).join('');
-      }
-
-      const eventTags = document.getElementById('event-tags');
-      if (eventTags) {
-        eventTags.innerHTML = events.map(e => `
-          <span class="tag">${e} <button data-event="${e}" class="btn-remove-event">&times;</button></span>
-        `).join('');
-      }
-
-      const select = document.getElementById('event-select');
-      if (select) {
-        select.innerHTML = '<option value="">-- Choose Event --</option>' + events.map(e => `<option value="${e}">${e}</option>`).join('');
-      }
-
-      // Attach dynamic event listeners for tags
-      document.querySelectorAll('.btn-remove-player').forEach(btn => {
-        btn.addEventListener('click', () => removePlayer(btn.dataset.player));
-      });
-      document.querySelectorAll('.btn-remove-event').forEach(btn => {
-        btn.addEventListener('click', () => removeEvent(btn.dataset.event));
-      });
-    }
-
-    function renderScoreInputs() {
-      const container = document.getElementById('score-inputs-container');
-      const eventSelect = document.getElementById('event-select');
-      if (!eventSelect || !container) return;
-      
-      const eventName = eventSelect.value;
-
-      if (!eventName || players.length === 0) {
-        container.innerHTML = '';
-        return;
-      }
-
-      let html = '<div style="margin-top: 15px;">';
-      players.forEach(p => {
-        html += `
-          <div class="form-group" style="display: flex; gap: 10px; align-items: center;">
-            <label style="width: 150px; margin: 0;">${p}</label>
-            <input type="number" class="player-score-field" data-player="${p}" placeholder="Enter score">
-          </div>
-        `;
-      });
-      html += '<button id="btn-submit-scores">Submit Scores</button></div>';
-      container.innerHTML = html;
-
-      document.getElementById('btn-submit-scores')?.addEventListener('click', submitEventScores);
-    }
-
-    // --- Score Submission Logic ---
-    function submitEventScores() {
-      const eventName = document.getElementById('event-select').value;
-      const isHighWins = document.getElementById('score-type').value === 'high';
-      const scoreInputs = document.querySelectorAll('.player-score-field');
-      let eventScores = [];
-
-      scoreInputs.forEach(input => {
-        const value = parseFloat(input.value);
-        if (!isNaN(value)) {
-          eventScores.push({ name: input.dataset.player, score: value });
-        }
-      });
-
-      if (eventScores.length === 0) {
-        alert('Please enter scores for at least one athlete.');
-        return;
-      }
-
-      eventScores.sort((a, b) => isHighWins ? b.score - a.score : a.score - b.score);
-      let currentRank = 1;
-
-      const processedResults = eventScores.map((entry, index, array) => {
-        if (index > 0 && entry.score !== array[index - 1].score) {
-          currentRank = index + 1;
-        }
-        const points = pointsMap[currentRank] !== undefined ? pointsMap[currentRank] : 1;
-        return { ...entry, rank: currentRank, medal: medalsMap[currentRank] || '', points };
-      });
-
-      const eventPayload = {
-        eventName,
-        timestamp: new Date().toISOString(),
-        results: processedResults
-      };
-
-      completedEvents.push(eventPayload);
-      updateLeaderboard();
-      renderCompletedEvents();
-
-      saveEventToFirebase(currentLeagueName, eventPayload);
-
-      document.getElementById('event-select').value = '';
-      renderScoreInputs();
-    }
-
-    // --- Standings & Logs Rendering ---
-    function updateLeaderboard() {
-      const totals = {};
-
-      completedEvents.forEach(evt => {
-        evt.results.forEach(res => {
-          if (!totals[res.name]) {
-            totals[res.name] = { points: 0, golds: 0, silvers: 0, bronzes: 0 };
-          }
-          totals[res.name].points += res.points || 0;
-          if (res.rank === 1) totals[res.name].golds++;
-          if (res.rank === 2) totals[res.name].silvers++;
-          if (res.rank === 3) totals[res.name].bronzes++;
-        });
-      });
-
-      const leaderboardArray = Object.keys(totals).map(name => ({
-        name,
-        ...totals[name]
-      })).sort((a, b) => b.points - a.points);
-
-      const tbody = document.getElementById('leaderboard-body');
-      if (tbody) {
-        tbody.innerHTML = leaderboardArray.map((entry, idx) => `
-          <tr>
-            <td>${idx + 1}</td>
-            <td>${entry.name
+      apiKey: "AIzaSyBvL2K8R82qk3fG4EEK
