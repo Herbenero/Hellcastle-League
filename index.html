@@ -274,9 +274,9 @@
             <th>Rank</th>
             <th>Athlete</th>
             <th>Total Points</th>
-            <th>🥇 Golds</th>
-            <th>🥈 Silvers</th>
-            <th>🥉 Bronzes</th>
+            <th>Wins (W)</th>
+            <th>Losses (L)</th>
+            <th>Ties (T)</th>
           </tr>
         </thead>
         <tbody id="leaderboard-body">
@@ -326,7 +326,6 @@
     const completedEvents = [];
 
     const pointsMap = { 1: 25, 2: 20, 3: 15 };
-    const medalsMap = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
     function setNowDate() {
       const dateInput = document.getElementById('event-date');
@@ -576,7 +575,7 @@
           currentRank = index + 1;
         }
         const points = pointsMap[currentRank] !== undefined ? pointsMap[currentRank] : 1;
-        return { ...entry, rank: currentRank, medal: medalsMap[currentRank] || '', points };
+        return { ...entry, rank: currentRank, points };
       });
 
       const eventPayload = {
@@ -641,14 +640,29 @@
       const totals = {};
 
       completedEvents.forEach(evt => {
+        // Count total occurrences for each rank to identify ties
+        const rankCounts = {};
+        evt.results.forEach(res => {
+          rankCounts[res.rank] = (rankCounts[res.rank] || 0) + 1;
+        });
+
         evt.results.forEach(res => {
           if (!totals[res.name]) {
-            totals[res.name] = { points: 0, golds: 0, silvers: 0, bronzes: 0 };
+            totals[res.name] = { points: 0, wins: 0, losses: 0, ties: 0 };
           }
           totals[res.name].points += res.points || 0;
-          if (res.rank === 1) totals[res.name].golds++;
-          if (res.rank === 2) totals[res.name].silvers++;
-          if (res.rank === 3) totals[res.name].bronzes++;
+
+          const isTie = rankCounts[res.rank] > 1;
+
+          if (isTie) {
+            totals[res.name].ties++;
+          }
+
+          if (res.rank === 1) {
+            totals[res.name].wins++;
+          } else {
+            totals[res.name].losses++;
+          }
         });
       });
 
@@ -664,9 +678,9 @@
             <td>${idx + 1}</td>
             <td>${entry.name}</td>
             <td><strong>${entry.points}</strong></td>
-            <td>${entry.golds}</td>
-            <td>${entry.silvers}</td>
-            <td>${entry.bronzes}</td>
+            <td>${entry.wins}</td>
+            <td>${entry.losses}</td>
+            <td>${entry.ties}</td>
           </tr>
         `).join('');
       }
@@ -685,7 +699,7 @@
               </div>
             </div>
             <ul>
-              ${evt.results.map(r => `<li>${r.rank}. ${r.medal}${r.name} - ${r.score} (${r.points} pts)</li>`).join('')}
+              ${evt.results.map(r => `<li>${r.rank}.${r.name} - ${r.score} (${r.points} pts)</li>`).join('')}
             </ul>
           </div>
         `).join('');
