@@ -259,34 +259,89 @@ const analytics = getAnalytics(app);
 </script>
 </head>
 <body>
+  <!-- Place inside <head> -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc, collection, getDocs, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBvL2K8R82qk3fG4EEKZ6sOIiieLcCKckA",
+    authDomain: "haal-fc862.firebaseapp.com",
+    projectId: "haal-fc862",
+    storageBucket: "haal-fc862.firebasestorage.app",
+    messagingSenderId: "1077392905739",
+    appId: "1:1077392905739:web:cc047fae886356663fd90e",
+    measurementId: "G-P99RVN1XBF"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  window.db = db;
+  window.doc = doc;
+  window.setDoc = setDoc;
+  window.getDoc = getDoc;
+  window.collection = collection;
+  window.getDocs = getDocs;
+  window.arrayUnion = arrayUnion;
+  window.serverTimestamp = serverTimestamp;
+</script>
   <h1>🏆 Hellcastle Archery Arena League</h1>
 
-  <!-- 1. Tournament Setup -->
-  <div class="card">
-    <h2>1. League Night Setup</h2>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-      <div>
-        <div class="form-group">
-          <label for="player-input">Add Combatant / Player Name</label>
-          <div class="btn-group">
-            <input type="text" id="player-input" placeholder="e.g. John Doe" onkeydown="if(event.key==='Enter') addPlayer()">
-            <button onclick="addPlayer()">Add</button>
-          </div>
-        </div>
-        <div id="player-tags" class="tag-list"></div>
+  <!-- 1. League Setup & Selection -->
+<div class="card">
+  <h2>1. Active League Setup</h2>
+  
+  <!-- Select or Create League -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+    <div>
+      <div class="form-group">
+        <label for="league-select">Continue Saved League</label>
+        <select id="league-select" onchange="loadSelectedLeague()">
+          <option value="">-- Select Existing League --</option>
+        </select>
       </div>
-      <div>
-        <div class="form-group">
-          <label for="event-input">Add Event Name</label>
-          <div class="btn-group">
-            <input type="text" id="event-input" placeholder="e.g. Robin Hood" onkeydown="if(event.key==='Enter') addEvent()">
-            <button onclick="addEvent()">Add</button>
-          </div>
+    </div>
+    <div>
+      <div class="form-group">
+        <label for="league-name-input">Create New League Name</label>
+        <div class="btn-group">
+          <input type="text" id="league-name-input" placeholder="e.g. Hellcastle Archery League">
+          <button onclick="setActiveLeague()">Set League</button>
         </div>
-        <div id="event-tags" class="tag-list"></div>
       </div>
     </div>
   </div>
+
+  <h3 id="current-league-header" style="color: var(--gold); font-size: 1.1rem; margin-bottom: 1rem;">
+    Current Active League: <em>None Selected</em>
+  </h3>
+
+  <hr style="border-color: var(--border); margin-bottom: 1.5rem;">
+
+  <!-- Add Players and Events -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <div>
+      <div class="form-group">
+        <label for="player-input">Add Combatant / Player Name</label>
+        <div class="btn-group">
+          <input type="text" id="player-input" placeholder="e.g. John Doe" onkeydown="if(event.key==='Enter') addPlayer()">
+          <button onclick="addPlayer()">Add</button>
+        </div>
+      </div>
+      <div id="player-tags" class="tag-list"></div>
+    </div>
+    <div>
+      <div class="form-group">
+        <label for="event-input">Add Event Name</label>
+        <div class="btn-group">
+          <input type="text" id="event-input" placeholder="e.g. Robin Hood" onkeydown="if(event.key==='Enter') addEvent()">
+          <button onclick="addEvent()">Add</button> </div>
+      </div>
+      <div id="event-tags" class="tag-list"></div>
+    </div>
+  </div>
+</div>
 
   <!-- 2. Score Entry Section -->
   <div class="card">
@@ -391,6 +446,110 @@ const analytics = getAnalytics(app);
   </div>
 
   <script>
+    let currentLeagueName = "Hellcastle Archery League";
+
+// Fetch existing leagues from Firebase to populate dropdown
+async function fetchSavedLeagues() {
+  if (!window.db) return;
+  const select = document.getElementById('league-select');
+  select.innerHTML = '<option value="">-- Select Existing League --</option>';
+
+  try {
+    const querySnapshot = await window.getDocs(window.collection(window.db, "leagues"));
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (data.leagueName) {
+        const opt = document.createElement('option');
+        opt.value = data.leagueName;
+        opt.textContent = data.leagueName;
+        select.appendChild(opt);
+      }
+    });
+  } catch (err) {
+    console.error("Error fetching leagues:", err);
+  }
+}
+
+// Set active league from the input field
+function setActiveLeague() {
+  const input = document.getElementById('league-name-input');
+  const name = input.value.trim();
+  if (!name) {
+    alert("Please enter a valid league name.");
+    return;
+  }
+  currentLeagueName = name;
+  document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
+  input.value = '';
+}
+
+// Load chosen league data directly from Firestore
+async function loadSelectedLeague() {
+  const select = document.getElementById('league-select');
+  const leagueName = select.value;
+  if (!leagueName) return;
+
+  currentLeagueName = leagueName;
+  document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
+
+  const docId = leagueName.trim().replace(/\s+/g, '_');
+  const leagueRef = window.doc(window.db, "leagues", docId);
+
+  try {
+    const docSnap = await window.getDoc(leagueRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      if (data.completedEvents) {
+        completedEvents.length = 0; // Clear existing local list
+        completedEvents.push(...data.completedEvents);
+
+        // Auto-extract player list from existing recorded games
+        data.completedEvents.forEach(evt => {
+          evt.results.forEach(res => {
+            if (res.name && !players.includes(res.name)) {
+              players.push(res.name);
+            }
+          });
+        });
+
+        renderSetupUI();
+        updateLeaderboard();
+        renderCompletedEvents();
+      }
+    }
+  } catch (err) {
+    console.error("Error loading league data:", err);
+  }
+}
+
+// Updated Firebase Save Helper using active league name
+async function saveEventToFirebase(leagueName, eventData) {
+  if (!window.db) {
+    console.warn("Firebase is not initialized yet.");
+    return;
+  }
+
+  const docId = leagueName.trim().replace(/\s+/g, '_');
+  const leagueRef = window.doc(window.db, "leagues", docId);
+
+  try {
+    await window.setDoc(leagueRef, {
+      leagueName: leagueName,
+      lastUpdated: window.serverTimestamp(),
+      completedEvents: window.arrayUnion(eventData)
+    }, { merge: true });
+
+    console.log(`Successfully saved event to league: ${leagueName}`);
+    fetchSavedLeagues(); // Refresh dropdown menu options
+  } catch (error) {
+    console.error("Error saving event to Firebase: ", error);
+  }
+}
+
+// Ensure saved leagues load when page opens
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(fetchSavedLeagues, 1000);
+});
     async function saveEventToFirebase(leagueName, eventData) {
   if (!window.db) {
     console.warn("Firebase is not initialized yet.");
@@ -851,6 +1010,116 @@ const analytics = getAnalytics(app);
         </div>
       `).join('');
     }
+    // ==========================================
+  // STEP 3: FIREBASE SAVE & LEAGUE MANAGEMENT
+  // ==========================================
+
+  let currentLeagueName = "Hellcastle Archery League";
+
+  // Fetch existing leagues from Firebase to populate dropdown
+  async function fetchSavedLeagues() {
+    if (!window.db) return;
+    const select = document.getElementById('league-select');
+    if (!select) return;
+    select.innerHTML = '<option value="">-- Select Existing League --</option>';
+
+    try {
+      const querySnapshot = await window.getDocs(window.collection(window.db, "leagues"));
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.leagueName) {
+          const opt = document.createElement('option');
+          opt.value = data.leagueName;
+          opt.textContent = data.leagueName;
+          select.appendChild(opt);
+        }
+      });
+    } catch (err) {
+      console.error("Error fetching leagues:", err);
+    }
+  }
+
+  // Set active league from the text input field
+  function setActiveLeague() {
+    const input = document.getElementById('league-name-input');
+    const name = input.value.trim();
+    if (!name) {
+      alert("Please enter a valid league name.");
+      return;
+    }
+    currentLeagueName = name;
+    document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
+    input.value = '';
+  }
+
+  // Load chosen league data directly from Firestore
+  async function loadSelectedLeague() {
+    const select = document.getElementById('league-select');
+    const leagueName = select.value;
+    if (!leagueName) return;
+
+    currentLeagueName = leagueName;
+    document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
+
+    const docId = leagueName.trim().replace(/\s+/g, '_');
+    const leagueRef = window.doc(window.db, "leagues", docId);
+
+    try {
+      const docSnap = await window.getDoc(leagueRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.completedEvents) {
+          completedEvents.length = 0; // Clear existing local list
+          completedEvents.push(...data.completedEvents);
+
+          // Auto-extract player list from existing recorded games
+          data.completedEvents.forEach(evt => {
+            evt.results.forEach(res => {
+              if (res.name && !players.includes(res.name)) {
+                players.push(res.name);
+              }
+            });
+          });
+
+          if (typeof renderSetupUI === 'function') renderSetupUI();
+          if (typeof updateLeaderboard === 'function') updateLeaderboard();
+          if (typeof renderCompletedEvents === 'function') renderCompletedEvents();
+        }
+      }
+    } catch (err) {
+      console.error("Error loading league data:", err);
+    }
+  }
+
+  // Helper function to save game results to Firestore
+  async function saveEventToFirebase(leagueName, eventData) {
+    if (!window.db) {
+      console.warn("Firebase is not initialized yet.");
+      return;
+    }
+
+    const docId = leagueName.trim().replace(/\s+/g, '_');
+    const leagueRef = window.doc(window.db, "leagues", docId);
+
+    try {
+      await window.setDoc(leagueRef, {
+        leagueName: leagueName,
+        lastUpdated: window.serverTimestamp(),
+        completedEvents: window.arrayUnion(eventData)
+      }, { merge: true });
+
+      console.log(`Successfully saved event to league: ${leagueName}`);
+      fetchSavedLeagues(); // Refresh dropdown list
+    } catch (error) {
+      console.error("Error saving event to Firebase: ", error);
+    }
+  }
+
+  // Load saved leagues when the DOM is ready
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(fetchSavedLeagues, 1000);
+  });
+</script>
   </script>
 </body>
 </html>
