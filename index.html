@@ -49,6 +49,7 @@
       margin-bottom: 20px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.3);
       border: 1px solid var(--border-color);
+      position: relative;
     }
 
     .form-row {
@@ -190,6 +191,23 @@
       padding: 5px 10px;
       font-size: 0.85em;
     }
+
+    .record-alert {
+      display: none;
+      background-color: #ffd700;
+      color: #121212;
+      font-weight: bold;
+      text-align: center;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.99); opacity: 0.9; }
+      100% { transform: scale(1.01); opacity: 1; }
+    }
   </style>
 </head>
 <body>
@@ -249,6 +267,10 @@
     <div class="card">
       <h2>2. Enter Event Results</h2>
       
+      <div id="record-banner" class="record-alert">
+        🎉 New Record Score!
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label for="event-select">Select Event</label>
@@ -603,6 +625,23 @@
         return;
       }
 
+      // Check if any score breaks the previous record for this event
+      let isNewRecord = false;
+      const previousEventsForGame = completedEvents.filter((evt, idx) => evt.eventName === eventName && idx !== editingIndex);
+
+      if (previousEventsForGame.length > 0) {
+        const previousScores = previousEventsForGame.flatMap(evt => evt.results.map(r => r.score));
+        if (previousScores.length > 0) {
+          if (isHighWins) {
+            const previousMax = Math.max(...previousScores);
+            isNewRecord = eventScores.some(s => s.score > previousMax);
+          } else {
+            const previousMin = Math.min(...previousScores);
+            isNewRecord = eventScores.some(s => s.score < previousMin);
+          }
+        }
+      }
+
       eventScores.sort((a, b) => isHighWins ? b.score - a.score : a.score - b.score);
       let currentRank = 1;
 
@@ -627,6 +666,10 @@
         completedEvents.push(eventPayload);
       }
 
+      if (isNewRecord) {
+        triggerRecordBanner();
+      }
+
       updateLeaderboard();
       renderCompletedEvents();
 
@@ -635,6 +678,16 @@
       document.getElementById('event-select').value = '';
       setNowDate();
       renderScoreInputs();
+    }
+
+    function triggerRecordBanner() {
+      const banner = document.getElementById('record-banner');
+      if (banner) {
+        banner.style.display = 'block';
+        setTimeout(() => {
+          banner.style.display = 'none';
+        }, 4000);
+      }
     }
 
     // --- Edit and Delete Handlers ---
