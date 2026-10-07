@@ -160,6 +160,10 @@
       color: var(--accent-color);
       margin-top: -10px;
       margin-bottom: 15px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
     }
 
     .event-card {
@@ -213,7 +217,10 @@
         </div>
       </div>
 
-      <div id="current-league-header">Current Active League: <strong>Hellcastle Archery League</strong></div>
+      <div id="current-league-header">
+        <span>Current Active League: <strong id="current-league-text">Hellcastle Archery League</strong></span>
+        <button class="btn-danger" style="padding: 4px 10px; font-size: 0.85em;" onclick="deleteCurrentLeague()">🗑️ Delete League</button>
+      </div>
 
       <hr style="border-color: var(--border-color); margin: 20px 0;">
 
@@ -300,6 +307,7 @@
       doc, 
       setDoc, 
       getDoc, 
+      deleteDoc,
       collection, 
       getDocs, 
       serverTimestamp 
@@ -391,10 +399,8 @@
       }
 
       currentLeagueName = name;
-      const header = document.getElementById('current-league-header');
-      if (header) {
-        header.innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
-      }
+      const textElem = document.getElementById('current-league-text');
+      if (textElem) textElem.textContent = currentLeagueName;
       
       players.length = 0;
       events.length = 0;
@@ -415,7 +421,7 @@
       if (!leagueName) return;
 
       currentLeagueName = leagueName;
-      document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
+      document.getElementById('current-league-text').textContent = currentLeagueName;
 
       const sanitizedDocId = leagueName.trim().replace(/[/\\?%*:|"<>]/g, '_');
       const leagueRef = doc(db, "leagues", sanitizedDocId);
@@ -451,6 +457,36 @@
         }
       } catch (err) {
         console.error("Error loading league data:", err);
+      }
+    }
+
+    async function deleteCurrentLeague() {
+      if (!confirm(`Are you sure you want to permanently delete the active league "${currentLeagueName}"?`)) {
+        return;
+      }
+
+      const sanitizedDocId = currentLeagueName.trim().replace(/[/\\?%*:|"<>]/g, '_');
+      const leagueRef = doc(db, "leagues", sanitizedDocId);
+
+      try {
+        await deleteDoc(leagueRef);
+        alert(`League "${currentLeagueName}" deleted successfully.`);
+
+        currentLeagueName = "Hellcastle Archery League";
+        document.getElementById('current-league-text').textContent = currentLeagueName;
+
+        players.length = 0;
+        events.length = 0;
+        completedEvents.length = 0;
+        editingIndex = null;
+
+        renderSetupUI();
+        updateLeaderboard();
+        renderCompletedEvents();
+        await fetchSavedLeagues();
+      } catch (err) {
+        console.error("Error deleting league:", err);
+        alert("Failed to delete league from database.");
       }
     }
 
@@ -640,7 +676,6 @@
       const totals = {};
 
       completedEvents.forEach(evt => {
-        // Count total occurrences for each rank to identify ties
         const rankCounts = {};
         evt.results.forEach(res => {
           rankCounts[res.rank] = (rankCounts[res.rank] || 0) + 1;
@@ -709,6 +744,7 @@
     // EXPOSE ALL FUNCTIONS TO WINDOW SCOPE FOR INLINE HTML HANDLERS
     window.setActiveLeague = setActiveLeague;
     window.loadSelectedLeague = loadSelectedLeague;
+    window.deleteCurrentLeague = deleteCurrentLeague;
     window.addPlayer = addPlayer;
     window.removePlayer = removePlayer;
     window.addEvent = addEvent;
