@@ -235,6 +235,28 @@
       color: #ffffff;
     }
   </style>
+  // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBvL2K8R82qk3fG4EEKZ6sOIiieLcCKckA",
+  authDomain: "haal-fc862.firebaseapp.com",
+  projectId: "haal-fc862",
+  storageBucket: "haal-fc862.firebasestorage.app",
+  messagingSenderId: "1077392905739",
+  appId: "1:1077392905739:web:cc047fae886356663fd90e",
+  measurementId: "G-P99RVN1XBF"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+</script>
 </head>
 <body>
   <h1>🏆 Hellcastle Archery Arena League</h1>
@@ -369,6 +391,28 @@
   </div>
 
   <script>
+    async function saveEventToFirebase(leagueName, eventData) {
+  if (!window.db) {
+    console.warn("Firebase is not initialized yet.");
+    return;
+  }
+
+  // Sanitize document ID (replace special characters/spaces if needed)
+  const docId = leagueName.trim().replace(/\s+/g, '_');
+  const leagueRef = window.doc(window.db, "leagues", docId);
+
+  try {
+    await window.setDoc(leagueRef, {
+      leagueName: leagueName,
+      lastUpdated: window.serverTimestamp(),
+      completedEvents: window.arrayUnion(eventData)
+    }, { merge: true });
+
+    console.log(`Successfully saved event to league: ${leagueName}`);
+  } catch (error) {
+    console.error("Error saving event to Firebase: ", error);
+  }
+}
     const players = [];
     const events = [];
     const completedEvents = [];
@@ -652,79 +696,86 @@
     }
 
     function finalizeSwitchEvent() {
-      const eventName = document.getElementById('event-select').value;
-      const sorted = getSortedSwitchStandings();
+  const eventName = document.getElementById('event-select').value;
+  const sorted = getSortedSwitchStandings();
+  let currentRank = 1;
 
-      let currentRank = 1;
-      const processedResults = sorted.map((entry, index, array) => {
-        if (index > 0 && (entry.wins !== array[index - 1].wins || entry.points !== array[index - 1].points)) {
-          currentRank = index + 1;
-        }
-        const points = pointsMap[currentRank] !== undefined ? pointsMap[currentRank] : 1;
-        return {
-          name: entry.name,
-          score: `${entry.wins} Wins (${entry.points} pts)`,
-          rank: currentRank,
-          medal: medalsMap[currentRank] || '',
-          points
-        };
-      });
-
-      completedEvents.push({
-        eventName: `${eventName} (Switch)`,
-        results: processedResults
-      });
-
-      updateLeaderboard();
-      renderCompletedEvents();
-
-      document.getElementById('event-select').value = '';
-      renderScoreInputs();
+  const processedResults = sorted.map((entry, index, array) => {
+    if (index > 0 && (entry.wins !== array[index - 1].wins || entry.points !== array[index - 1].points)) {
+      currentRank = index + 1;
     }
+    const points = pointsMap[currentRank] !== undefined ? pointsMap[currentRank] : 1;
+    return {
+      name: entry.name,
+      score: `${entry.wins} Wins (${entry.points} pts)`,
+      rank: currentRank,
+      medal: medalsMap[currentRank] || '',
+      points
+    };
+  });
 
+  const eventPayload = {
+    eventName: `${eventName} (Switch)`,
+    timestamp: new Date().toISOString(),
+    results: processedResults
+  };
+
+  completedEvents.push(eventPayload);
+  updateLeaderboard();
+  renderCompletedEvents();
+
+  // Save to Firestore under the League Name
+  saveEventToFirebase("Hellcastle Archery League", eventPayload);
+
+  document.getElementById('event-select').value = '';
+  renderScoreInputs();
+}
     /* Standard Score Entry Submit with Tied-Rank Scoring */
     function submitEventScores() {
-      const eventName = document.getElementById('event-select').value;
-      const isHighWins = document.getElementById('score-type').value === 'high';
-      const scoreInputs = document.querySelectorAll('.player-score-field');
+  const eventName = document.getElementById('event-select').value;
+  const isHighWins = document.getElementById('score-type').value === 'high';
+  const scoreInputs = document.querySelectorAll('.player-score-field');
+  let eventScores = [];
 
-      let eventScores = [];
-      scoreInputs.forEach(input => {
-        const value = parseFloat(input.value);
-        if (!isNaN(value)) {
-          eventScores.push({ name: input.dataset.player, score: value });
-        }
-      });
-
-      if (eventScores.length === 0) {
-        alert('Please enter scores for at least one athlete.');
-        return;
-      }
-
-      eventScores.sort((a, b) => isHighWins ? b.score - a.score : a.score - b.score);
-
-      let currentRank = 1;
-      const processedResults = eventScores.map((entry, index, array) => {
-        if (index > 0 && entry.score !== array[index - 1].score) {
-          currentRank = index + 1;
-        }
-        const points = pointsMap[currentRank] !== undefined ? pointsMap[currentRank] : 1;
-        return {
-          ...entry,
-          rank: currentRank,
-          medal: medalsMap[currentRank] || '',
-          points
-        };
-      });
-
-      completedEvents.push({ eventName, results: processedResults });
-      updateLeaderboard();
-      renderCompletedEvents();
-
-      document.getElementById('event-select').value = '';
-      renderScoreInputs();
+  scoreInputs.forEach(input => {
+    const value = parseFloat(input.value);
+    if (!isNaN(value)) {
+      eventScores.push({ name: input.dataset.player, score: value });
     }
+  });
 
+  if (eventScores.length === 0) {
+    alert('Please enter scores for at least one athlete.');
+    return;
+  }
+
+  eventScores.sort((a, b) => isHighWins ? b.score - a.score : a.score - b.score);
+  let currentRank = 1;
+
+  const processedResults = eventScores.map((entry, index, array) => {
+    if (index > 0 && entry.score !== array[index - 1].score) {
+      currentRank = index + 1;
+    }
+    const points = pointsMap[currentRank] !== undefined ? pointsMap[currentRank] : 1;
+    return { ...entry, rank: currentRank, medal: medalsMap[currentRank] || '', points };
+  });
+
+  const eventPayload = {
+    eventName,
+    timestamp: new Date().toISOString(),
+    results: processedResults
+  };
+
+  completedEvents.push(eventPayload);
+  updateLeaderboard();
+  renderCompletedEvents();
+
+  // Save to Firestore under the League Name
+  saveEventToFirebase("Hellcastle Archery League", eventPayload);
+
+  document.getElementById('event-select').value = '';
+  renderScoreInputs();
+}
     /* Update Overall Leaderboard with Shared Ranks */
     function updateLeaderboard() {
       const standings = {};
