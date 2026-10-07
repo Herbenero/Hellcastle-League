@@ -268,4 +268,350 @@
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyBvL2K8R82qk3fG4EEK
+      apiKey: "AIzaSyBvL2K8R82qk3fG4EEKZ6sOIiieLcCKckA",
+      authDomain: "haal-fc862.firebaseapp.com",
+      projectId: "haal-fc862",
+      storageBucket: "haal-fc862.firebasestorage.app",
+      messagingSenderId: "1077392905739",
+      appId: "1:1077392905739:web:cc047fae886356663fd90e",
+      measurementId: "G-P99RVN1XBF"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Application State
+    let currentLeagueName = "Hellcastle Archery League";
+    const players = [];
+    const events = [];
+    const completedEvents = [];
+
+    const pointsMap = { 1: 25, 2: 20, 3: 15 };
+    const medalsMap = { 1: '🥇', 2: '🥈', 3: '🥉' };
+
+    // --- Firebase League Helpers ---
+    async function fetchSavedLeagues() {
+      const select = document.getElementById('league-select');
+      if (!select) return;
+      
+      select.innerHTML = '<option value="">-- Select Existing League --</option>';
+
+      try {
+        const querySnapshot = await getDocs(collection(db, "leagues"));
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data.leagueName) {
+            const opt = document.createElement('option');
+            opt.value = data.leagueName;
+            opt.textContent = data.leagueName;
+            if (data.leagueName === currentLeagueName) {
+              opt.selected = true;
+            }
+            select.appendChild(opt);
+          }
+        });
+      } catch (err) {
+        console.error("Error fetching leagues:", err);
+      }
+    }
+
+    async function setActiveLeague() {
+      const input = document.getElementById('league-name-input');
+      const name = input.value.trim();
+      if (!name) {
+        alert("Please enter a valid league name.");
+        return;
+      }
+
+      currentLeagueName = name;
+      document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
+      
+      players.length = 0;
+      events.length = 0;
+      completedEvents.length = 0;
+
+      renderSetupUI();
+      updateLeaderboard();
+      renderCompletedEvents();
+
+      const docId = currentLeagueName.trim().replace(/\s+/g, '_');
+      const leagueRef = doc(db, "leagues", docId);
+
+      try {
+        await setDoc(leagueRef, {
+          leagueName: currentLeagueName,
+          lastUpdated: serverTimestamp(),
+          completedEvents: []
+        }, { merge: true });
+
+        await fetchSavedLeagues();
+        input.value = '';
+      } catch (err) {
+        console.error("Error creating league in Firebase:", err);
+      }
+    }
+
+    async function loadSelectedLeague() {
+      const select = document.getElementById('league-select');
+      const leagueName = select.value;
+      if (!leagueName) return;
+
+      currentLeagueName = leagueName;
+      document.getElementById('current-league-header').innerHTML = `Current Active League: <strong>${currentLeagueName}</strong>`;
+
+      const docId = leagueName.trim().replace(/\s+/g, '_');
+      const leagueRef = doc(db, "leagues", docId);
+
+      try {
+        const docSnap = await getDoc(leagueRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          
+          completedEvents.length = 0;
+          players.length = 0;
+
+          if (data.completedEvents) {
+            completedEvents.push(...data.completedEvents);
+
+            data.completedEvents.forEach(evt => {
+              evt.results.forEach(res => {
+                if (res.name && !players.includes(res.name)) {
+                  players.push(res.name);
+                }
+              });
+            });
+          }
+
+          renderSetupUI();
+          updateLeaderboard();
+          renderCompletedEvents();
+        }
+      } catch (err) {
+        console.error("Error loading league data:", err);
+      }
+    }
+
+    async function saveEventToFirebase(leagueName, eventData) {
+      const docId = leagueName.trim().replace(/\s+/g, '_');
+      const leagueRef = doc(db, "leagues", docId);
+
+      try {
+        await setDoc(leagueRef, {
+          leagueName: leagueName,
+          lastUpdated: serverTimestamp(),
+          completedEvents: arrayUnion(eventData)
+        }, { merge: true });
+
+        console.log(`Successfully saved event to league: ${leagueName}`);
+        fetchSavedLeagues();
+      } catch (error) {
+        console.error("Error saving event to Firebase: ", error);
+      }
+    }
+
+    // --- Setup UI Handlers ---
+    function addPlayer() {
+      const input = document.getElementById('player-input');
+      const name = input.value.trim();
+      if (name && !players.includes(name)) {
+        players.push(name);
+        input.value = '';
+        renderSetupUI();
+      }
+    }
+
+    function removePlayer(name) {
+      const idx = players.indexOf(name);
+      if (idx > -1) {
+        players.splice(idx, 1);
+        renderSetupUI();
+      }
+    }
+
+    function addEvent() {
+      const input = document.getElementById('event-input');
+      const name = input.value.trim();
+      if (name && !events.includes(name)) {
+        events.push(name);
+        input.value = '';
+        renderSetupUI();
+      }
+    }
+
+    function removeEvent(name) {
+      const idx = events.indexOf(name);
+      if (idx > -1) {
+        events.splice(idx, 1);
+        renderSetupUI();
+      }
+    }
+
+    function renderSetupUI() {
+      const playerTags = document.getElementById('player-tags');
+      if (playerTags) {
+        playerTags.innerHTML = players.map(p => `
+          <span class="tag">${p} <button onclick="removePlayer('${p}')">&times;</button></span>
+        `).join('');
+      }
+
+      const eventTags = document.getElementById('event-tags');
+      if (eventTags) {
+        eventTags.innerHTML = events.map(e => `
+          <span class="tag">${e} <button onclick="removeEvent('${e}')">&times;</button></span>
+        `).join('');
+      }
+
+      const select = document.getElementById('event-select');
+      if (select) {
+        select.innerHTML = '<option value="">-- Choose Event --</option>' + events.map(e => `<option value="${e}">${e}</option>`).join('');
+      }
+    }
+
+    function renderScoreInputs() {
+      const container = document.getElementById('score-inputs-container');
+      const eventSelect = document.getElementById('event-select');
+      if (!eventSelect || !container) return;
+      
+      const eventName = eventSelect.value;
+
+      if (!eventName || players.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      let html = '<div style="margin-top: 15px;">';
+      players.forEach(p => {
+        html += `
+          <div class="form-group" style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+            <label style="width: 150px; margin: 0;">${p}</label>
+            <input type="number" class="player-score-field" data-player="${p}" placeholder="Enter score">
+          </div>
+        `;
+      });
+      html += '<button onclick="submitEventScores()">Submit Scores</button></div>';
+      container.innerHTML = html;
+    }
+
+    // --- Score Submission Logic ---
+    function submitEventScores() {
+      const eventName = document.getElementById('event-select').value;
+      const isHighWins = document.getElementById('score-type').value === 'high';
+      const scoreInputs = document.querySelectorAll('.player-score-field');
+      let eventScores = [];
+
+      scoreInputs.forEach(input => {
+        const value = parseFloat(input.value);
+        if (!isNaN(value)) {
+          eventScores.push({ name: input.dataset.player, score: value });
+        }
+      });
+
+      if (eventScores.length === 0) {
+        alert('Please enter scores for at least one athlete.');
+        return;
+      }
+
+      eventScores.sort((a, b) => isHighWins ? b.score - a.score : a.score - b.score);
+      let currentRank = 1;
+
+      const processedResults = eventScores.map((entry, index, array) => {
+        if (index > 0 && entry.score !== array[index - 1].score) {
+          currentRank = index + 1;
+        }
+        const points = pointsMap[currentRank] !== undefined ? pointsMap[currentRank] : 1;
+        return { ...entry, rank: currentRank, medal: medalsMap[currentRank] || '', points };
+      });
+
+      const eventPayload = {
+        eventName,
+        timestamp: new Date().toISOString(),
+        results: processedResults
+      };
+
+      completedEvents.push(eventPayload);
+      updateLeaderboard();
+      renderCompletedEvents();
+
+      saveEventToFirebase(currentLeagueName, eventPayload);
+
+      document.getElementById('event-select').value = '';
+      renderScoreInputs();
+    }
+
+    // --- Standings & Logs Rendering ---
+    function updateLeaderboard() {
+      const totals = {};
+
+      completedEvents.forEach(evt => {
+        evt.results.forEach(res => {
+          if (!totals[res.name]) {
+            totals[res.name] = { points: 0, golds: 0, silvers: 0, bronzes: 0 };
+          }
+          totals[res.name].points += res.points || 0;
+          if (res.rank === 1) totals[res.name].golds++;
+          if (res.rank === 2) totals[res.name].silvers++;
+          if (res.rank === 3) totals[res.name].bronzes++;
+        });
+      });
+
+      const leaderboardArray = Object.keys(totals).map(name => ({
+        name,
+        ...totals[name]
+      })).sort((a, b) => b.points - a.points);
+
+      const tbody = document.getElementById('leaderboard-body');
+      if (tbody) {
+        tbody.innerHTML = leaderboardArray.map((entry, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${entry.name}</td>
+            <td><strong>${entry.points}</strong></td>
+            <td>${entry.golds}</td>
+            <td>${entry.silvers}</td>
+            <td>${entry.bronzes}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    function renderCompletedEvents() {
+      const container = document.getElementById('completed-events-log');
+      if (container) {
+        container.innerHTML = completedEvents.map(evt => `
+          <div style="background: #2a2a2a; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
+            <h3>${evt.eventName} <small>(${new Date(evt.timestamp).toLocaleDateString()})</small></h3>
+            <ul>
+              ${evt.results.map(r => `<li>${r.rank}. ${r.medal}${r.name} - ${r.score} (${r.points} pts)</li>`).join('')}
+            </ul>
+          </div>
+        `).join('');
+      }
+    }
+
+    // EXPOSE FUNCTIONS TO GLOBAL SCOPE FOR HTML INLINE HANDLERS
+    window.setActiveLeague = setActiveLeague;
+    window.loadSelectedLeague = loadSelectedLeague;
+    window.addPlayer = addPlayer;
+    window.removePlayer = removePlayer;
+    window.addEvent = addEvent;
+    window.removeEvent = removeEvent;
+    window.renderScoreInputs = renderScoreInputs;
+    window.submitEventScores = submitEventScores;
+
+    // --- Attach Event Listeners on DOM Ready ---
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('league-select')?.addEventListener('change', loadSelectedLeague);
+      document.getElementById('event-select')?.addEventListener('change', renderScoreInputs);
+
+      document.getElementById('player-input')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addPlayer();
+      });
+      document.getElementById('event-input')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addEvent();
+      });
+
+      fetchSavedLeagues();
+    });
+  </script>
+</body>
+</html>
