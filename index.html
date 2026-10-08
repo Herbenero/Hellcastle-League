@@ -962,7 +962,7 @@
       container.innerHTML = html;
     }
 
-    async function showPlayerProfile(playerName) {
+   async function showPlayerProfile(playerName) {
     if (!playerName) return;
     const pName = playerName.trim();
     const playerRef = doc(db, "players", pName);
@@ -977,76 +977,54 @@
         const data = docSnap.data();
         const rawHistory = data.gameHistory || [];
 
-        // 1. Unify and deduplicate League Documents in Firestore
-        const leaguesSnapshot = await getDocs(collection(db, "leagues"));
-        const unifiedLeagues = {};
+        // 1. In-Memory Deduplication of Match History via strict composite key
+        const seenMatches = new Map();
 
-        leaguesSnapshot.forEach(lDoc => {
-            const lData = lDoc.data();
-            if (!lData.completedEvents || !Array.isArray(lData.completedEvents)) return;
+        rawHistory.forEach(g => {
+            // Normalize dates to minute precision to deduplicate duplicate submissions
+            const rawDate = g.date || g.timestamp || '';
+            const normalizedDate = rawDate ? rawDate.slice(0, 16) : '';
+            
+            // Standardize league and event names
+            const normLeague = (g.league || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+            const normEvent = (g.event || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+            
+            const matchKey = `${normLeague}_${normEvent}_${g.score}_${g.rank}_${normalizedDate}`;
 
-            const rawLeagueName = lData.leagueName || lDoc.id;
-            const canonicalName = rawLeagueName.trim();
-            const key = canonicalName.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (!seenMatches.has(matchKey)) {
+                seenMatches.set(matchKey, g);
+            }
+        });
 
-            // Keep the league document with the most event history
-            if (!unifiedLeagues[key] || lData.completedEvents.length > unifiedLeagues[key].events.length) {
-                unifiedLeagues[key] = {
-                    displayName: canonicalName,
-                    events: lData.completedEvents
+        const deduplicatedHistory = Array.from(seenMatches.values());
+
+        // 2. Derive League Ranks directly from the player's deduplicated match records
+        const leagueStats = {};
+        deduplicatedHistory.forEach(m => {
+            const leagueName = (m.league || 'General').trim();
+            const normKey = leagueName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+            if (!leagueStats[normKey]) {
+                leagueStats[normKey] = {
+                    displayName: leagueName,
+                    points: 0,
+                    games: 0
                 };
             }
+            leagueStats[normKey].points += (m.points || 0);
+            leagueStats[normKey].games += 1;
         });
 
-        // Calculate single accurate rank per league
-        const leagueRanks = [];
-        Object.values(unifiedLeagues).forEach(leagueObj => {
-            const totals = {};
-            leagueObj.events.forEach(evt => {
-                if (!evt.results) return;
-                evt.results.forEach(res => {
-                    totals[res.name] = (totals[res.name] || 0) + (res.points || 0);
-                });
-            });
-
-            if (totals[pName] !== undefined) {
-                const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-                const rankIdx = sorted.findIndex(([name]) => name === pName);
-                if (rankIdx !== -1) {
-                    leagueRanks.push({
-                        league: leagueObj.displayName,
-                        rank: rankIdx + 1,
-                        points: totals[pName],
-                        totalPlayers: sorted.length
-                    });
-                }
-            }
-        });
-
-        const leagueRanksHtml = leagueRanks.length > 0 
-            ? leagueRanks.map(r => `
+        const leagueRanksHtml = Object.values(leagueStats).length > 0 
+            ? Object.values(leagueStats).map(l => `
                 <div style="background: var(--input-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); flex: 1; min-width: 140px;">
-                    <div style="font-size: 0.85em; color: var(--text-muted);">${r.league}</div>
-                    <div style="font-size: 1.1em; font-weight: bold; color: var(--gold);">Rank #${r.rank} <span style="font-size: 0.8em; font-weight: normal; color: var(--text-color);">(${r.points} pts)</span></div>
+                    <div style="font-size: 0.85em; color: var(--text-muted);">${l.displayName}</div>
+                    <div style="font-size: 1.1em; font-weight: bold; color: var(--gold);">${l.points} pts <span style="font-size: 0.8em; font-weight: normal; color: var(--text-color);">(${l.games} games)</span></div>
                 </div>
             `).join('')
             : '<p style="color: var(--text-muted); font-size: 0.9em;">No active league standings.</p>';
 
-        // 2. In-memory Deduplication of Player Match History
-        const seenMatches = new Set();
-        const deduplicatedHistory = [];
-
-        rawHistory.forEach(g => {
-            const dateStr = g.date ? g.date.slice(0, 16) : (g.timestamp ? g.timestamp.slice(0, 16) : '');
-            const matchKey = `${(g.league || '').toLowerCase()}_${(g.event || '').toLowerCase()}_${g.score}_${g.rank}_${dateStr}`;
-            
-            if (!seenMatches.has(matchKey)) {
-                seenMatches.add(matchKey);
-                deduplicatedHistory.push(g);
-            }
-        });
-
-        // Group games by game name and calculate clean totals
+        // 3. Group match history by game name
         const gameStats = {};
         let cleanLifetimePoints = 0;
         let cleanLifetimeWins = 0;
