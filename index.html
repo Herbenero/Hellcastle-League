@@ -765,7 +765,7 @@
     leaderboardData.sort((a, b) => b.points - a.points);
 
     // Render leaderboard rows
-    const tbody = document.querySelector('#leaderboard-table tbody');
+    const tbody = document.getElementById('leaderboard-body');
     if (!tbody) return;
     tbody.innerHTML = '';
 
@@ -782,7 +782,6 @@
         tbody.appendChild(tr);
     });
 }
-
     function renderCompletedEvents() {
       const container = document.getElementById('completed-events-log');
       if (container) {
