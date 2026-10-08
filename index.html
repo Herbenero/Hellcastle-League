@@ -588,31 +588,44 @@
 
     players.forEach(p => {
         let existingScore = '';
+        let existingSubs = {};
+
         if (prefillData && prefillData.results) {
             const match = prefillData.results.find(r => r.name === p);
-            if (match) existingScore = match.score;
+            if (match) {
+                existingScore = match.score !== undefined ? match.score : '';
+                existingSubs = match.subscores || {};
+            }
         }
 
         if (isJdcJr) {
+            const cb = existingSubs["Coloring Book"] !== undefined ? existingSubs["Coloring Book"] : '';
+            const bb = existingSubs["Bit of Bully"] !== undefined ? existingSubs["Bit of Bully"] : '';
+            const r180 = existingSubs["Race to 180"] !== undefined ? existingSubs["Race to 180"] : '';
+
             html += `
                 <div class="card" style="margin-bottom: 10px; padding: 12px; background: #222;">
                     <strong>${p}</strong>
                     <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-                        <input type="number" class="jdc-sub" data-player="${p}" placeholder="Coloring Book" style="flex: 1; min-width: 100px;" oninput="calcJdcTotal('${p}')">
-                        <input type="number" class="jdc-sub" data-player="${p}" placeholder="Bit of Bully" style="flex: 1; min-width: 100px;" oninput="calcJdcTotal('${p}')">
-                        <input type="number" class="jdc-sub" data-player="${p}" placeholder="Race to 180" style="flex: 1; min-width: 100px;" oninput="calcJdcTotal('${p}')">
+                        <input type="number" class="jdc-sub" data-player="${p}" value="${cb}" placeholder="Coloring Book" style="flex: 1; min-width: 100px;" oninput="calcJdcTotal('${p}')">
+                        <input type="number" class="jdc-sub" data-player="${p}" value="${bb}" placeholder="Bit of Bully" style="flex: 1; min-width: 100px;" oninput="calcJdcTotal('${p}')">
+                        <input type="number" class="jdc-sub" data-player="${p}" value="${r180}" placeholder="Race to 180" style="flex: 1; min-width: 100px;" oninput="calcJdcTotal('${p}')">
                         <input type="number" class="player-score-field" id="total-${p}" data-player="${p}" value="${existingScore}" placeholder="Total" style="flex: 1; min-width: 100px; font-weight: bold; border-color: var(--gold);" readonly>
                     </div>
                 </div>
             `;
         } else if (isSnapshot) {
+            const fp = existingSubs["Flash Point"] !== undefined ? existingSubs["Flash Point"] : '';
+            const ndc = existingSubs["9 Dart Century"] !== undefined ? existingSubs["9 Dart Century"] : '';
+            const qd = existingSubs["Quick Draw"] !== undefined ? existingSubs["Quick Draw"] : '';
+
             html += `
                 <div class="card" style="margin-bottom: 10px; padding: 12px; background: #222;">
                     <strong>${p}</strong>
                     <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-                        <input type="number" class="snap-sub" data-player="${p}" placeholder="Flash Point" style="flex: 1; min-width: 100px;" oninput="calcSnapTotal('${p}')">
-                        <input type="number" class="snap-sub" data-player="${p}" placeholder="9 Dart Century" style="flex: 1; min-width: 100px;" oninput="calcSnapTotal('${p}')">
-                        <input type="number" class="snap-sub" data-player="${p}" placeholder="Quick Draw" style="flex: 1; min-width: 100px;" oninput="calcSnapTotal('${p}')">
+                        <input type="number" class="snap-sub" data-player="${p}" value="${fp}" placeholder="Flash Point" style="flex: 1; min-width: 100px;" oninput="calcSnapTotal('${p}')">
+                        <input type="number" class="snap-sub" data-player="${p}" value="${ndc}" placeholder="9 Dart Century" style="flex: 1; min-width: 100px;" oninput="calcSnapTotal('${p}')">
+                        <input type="number" class="snap-sub" data-player="${p}" value="${qd}" placeholder="Quick Draw" style="flex: 1; min-width: 100px;" oninput="calcSnapTotal('${p}')">
                         <input type="number" class="player-score-field" id="total-${p}" data-player="${p}" value="${existingScore}" placeholder="Total" style="flex: 1; min-width: 100px; font-weight: bold; border-color: var(--gold);" readonly>
                     </div>
                 </div>
@@ -841,16 +854,20 @@ window.calcSnapTotal = function(player) {
     }
 
     let html = '';
-    
+
     // Display newest completed events first
     [...completedEvents].reverse().forEach((evt, revIdx) => {
         const actualIdx = completedEvents.length - 1 - revIdx;
-        const eventDate = evt.date ? new Date(evt.date).toLocaleString() : '';
+        
+        // Handle date fallback (evt.date or evt.timestamp)
+        const rawDate = evt.date || evt.timestamp;
+        const formattedDate = rawDate ? new Date(rawDate).toLocaleString() : '';
+        const dateDisplay = formattedDate ? ` <span style="font-weight: normal; color: var(--text-muted); font-size: 0.85em;">(${formattedDate})</span>` : '';
 
         html += `
             <div class="event-card">
                 <div class="event-header">
-                    <strong>${evt.eventName} <span style="font-weight: normal; color: var(--text-muted); font-size: 0.9em;">(${eventDate})</span></strong>
+                    <strong>${evt.eventName}${dateDisplay}</strong>
                     <div class="event-actions">
                         <button style="background: #4caf50;" onclick="editEvent(${actualIdx})">✏️ Edit</button>
                         <button class="btn-danger" onclick="deleteEvent(${actualIdx})">🗑️ Delete</button>
@@ -861,14 +878,14 @@ window.calcSnapTotal = function(player) {
 
         evt.results.forEach(res => {
             let subscoresText = '';
-            
-            // Format subscores if available on the result object
+
+            // Format subscores if present
             if (res.subscores && Object.keys(res.subscores).length > 0) {
                 const subDetails = Object.entries(res.subscores)
                     .filter(([_, val]) => val !== '' && val !== null && !isNaN(val))
                     .map(([key, val]) => `${key}: ${val}`)
                     .join(', ');
-                
+
                 if (subDetails) {
                     subscoresText = ` <span style="color: var(--text-muted); font-size: 0.9em;">(${subDetails})</span>`;
                 }
@@ -890,7 +907,6 @@ window.calcSnapTotal = function(player) {
 
     container.innerHTML = html;
 }
-
     // EXPOSE ALL FUNCTIONS TO WINDOW SCOPE FOR INLINE HTML HANDLERS
     window.setActiveLeague = setActiveLeague;
     window.loadSelectedLeague = loadSelectedLeague;
