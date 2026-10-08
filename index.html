@@ -386,6 +386,67 @@
         console.error("Error saving league to Firebase: ", error);
       }
     }
+    import { doc, getDoc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+async function updatePlayerProfiles(eventRecord) {
+    const rankCounts = {};
+    eventRecord.results.forEach(res => {
+        rankCounts[res.rank] = (rankCounts[res.rank] || 0) + 1;
+    });
+
+    for (const res of eventRecord.results) {
+        const playerRef = doc(db, "players", res.name.trim());
+        const isTie = rankCounts[res.rank] > 1;
+
+        const isWin = !isTie && res.rank === 1;
+        const isLoss = res.rank > 1;
+        const isTieStat = isTie && res.rank === 1;
+
+        try {
+            const docSnap = await getDoc(playerRef);
+
+            if (!docSnap.exists()) {
+                await setDoc(playerRef, {
+                    name: res.name,
+                    totalPoints: res.points || 0,
+                    wins: isWin ? 1 : 0,
+                    losses: isLoss ? 1 : 0,
+                    ties: isTieStat ? 1 : 0,
+                    gamesPlayed: 1,
+                    gameHistory: [{
+                        event: eventRecord.eventName,
+                        league: currentLeagueName,
+                        score: res.score,
+                        rank: res.rank,
+                        points: res.points,
+                        subscores: res.subscores || {},
+                        date: eventRecord.date || eventRecord.timestamp
+                    }]
+                });
+            } else {
+                const current = docSnap.data();
+                await updateDoc(playerRef, {
+                    totalPoints: (current.totalPoints || 0) + (res.points || 0),
+                    wins: (current.wins || 0) + (isWin ? 1 : 0),
+                    losses: (current.losses || 0) + (isLoss ? 1 : 0),
+                    ties: (current.ties || 0) + (isTieStat ? 1 : 0),
+                    gamesPlayed: (current.gamesPlayed || 0) + 1,
+                    gameHistory: arrayUnion({
+                        event: eventRecord.eventName,
+                        league: currentLeagueName,
+                        score: res.score,
+                        rank: res.rank,
+                        points: res.points,
+                        subscores: res.subscores || {},
+                        date: eventRecord.date || eventRecord.timestamp
+                    })
+                });
+            }
+        } catch (err) {
+            console.error(`Error updating player profile for ${res.name}:`, err);
+        }
+    }
+}
 
     async function fetchSavedLeagues() {
       const select = document.getElementById('league-select');
@@ -748,6 +809,11 @@ window.calcSnapTotal = function(player) {
     } else {
         completedEvents.push(eventRecord);
     }
+      // Persist and re-render UI
+    syncLeagueToFirebase();
+    updatePlayerProfiles(eventRecord); // <--- PASTE CALL HERE
+    updateLeaderboard();
+    renderCompletedEvents();
 
     // Persist and re-render UI
     syncLeagueToFirebase();
