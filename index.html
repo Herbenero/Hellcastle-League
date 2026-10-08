@@ -365,76 +365,81 @@
     }
 
     async function updatePlayerProfiles(eventRecord) {
-        const rankCounts = {};
-        eventRecord.results.forEach(res => {
-            rankCounts[res.rank] = (rankCounts[res.rank] || 0) + 1;
-        });
+    const rankCounts = {};
+    eventRecord.results.forEach(res => {
+        rankCounts[res.rank] = (rankCounts[res.rank] || 0) + 1;
+    });
 
-        // Stable match identifier for this event
-        const matchKey = `${currentLeagueName}_${eventRecord.eventName}_${eventRecord.date || eventRecord.timestamp}`.trim().toLowerCase();
+    // Stable match identifier for this event
+    const matchKey = `${currentLeagueName}_${eventRecord.eventName}_${eventRecord.date || eventRecord.timestamp}`.trim().toLowerCase();
 
-        for (const res of eventRecord.results) {
-            const playerRef = doc(db, "players", res.name.trim());
-            const isTie = rankCounts[res.rank] > 1;
+    for (const res of eventRecord.results) {
+        const playerRef = doc(db, "players", res.name.trim());
+        const isTie = rankCounts[res.rank] > 1;
 
-            const newMatchEntry = {
-                matchId: matchKey,
-                event: eventRecord.eventName,
-                league: currentLeagueName,
-                score: res.score,
-                rank: res.rank,
-                points: res.points || 0,
-                subscores: res.subscores || {},
-                date: eventRecord.date || eventRecord.timestamp
-            };
+        const newMatchEntry = {
+            matchId: matchKey,
+            event: eventRecord.eventName,
+            league: currentLeagueName,
+            score: res.score,
+            rank: res.rank,
+            isTie: isTie,
+            points: res.points || 0,
+            subscores: res.subscores || {},
+            date: eventRecord.date || eventRecord.timestamp
+        };
 
-            try {
-                const docSnap = await getDoc(playerRef);
-                let history = [];
-                if (docSnap.exists()) {
-                    history = docSnap.data().gameHistory || [];
-                }
-
-                // Replace if already exists with same matchKey, otherwise push
-                const existingIdx = history.findIndex(h => {
-                    const hKey = h.matchId || `${h.league}_${h.event}_${h.date}`.trim().toLowerCase();
-                    return hKey === matchKey;
-                });
-
-                if (existingIdx > -1) {
-                    history[existingIdx] = newMatchEntry;
-                } else {
-                    history.push(newMatchEntry);
-                }
-
-                // Recalculate lifetime stats directly from deduplicated history
-                let lifetimePts = 0;
-                let lifetimeWins = 0;
-                let lifetimeLosses = 0;
-                let lifetimeTies = 0;
-
-                history.forEach(m => {
-                    lifetimePts += (m.points || 0);
-                    if (m.rank === 1) lifetimeWins++;
-                    else if (m.rank > 1) lifetimeLosses++;
-                });
-
-                await setDoc(playerRef, {
-                    name: res.name.trim(),
-                    totalPoints: lifetimePts,
-                    wins: lifetimeWins,
-                    losses: lifetimeLosses,
-                    ties: lifetimeTies,
-                    gamesPlayed: history.length,
-                    gameHistory: history
-                }, { merge: true });
-
-            } catch (err) {
-                console.error(`Error updating player profile for ${res.name}:`, err);
+        try {
+            const docSnap = await getDoc(playerRef);
+            let history = [];
+            if (docSnap.exists()) {
+                history = docSnap.data().gameHistory || [];
             }
+
+            // Replace if already exists with same matchKey, otherwise push
+            const existingIdx = history.findIndex(h => {
+                const hKey = h.matchId || `${h.league}_${h.event}_${h.date}`.trim().toLowerCase();
+                return hKey === matchKey;
+            });
+
+            if (existingIdx > -1) {
+                history[existingIdx] = newMatchEntry;
+            } else {
+                history.push(newMatchEntry);
+            }
+
+            // Recalculate lifetime stats taking ties into account
+            let lifetimePts = 0;
+            let lifetimeWins = 0;
+            let lifetimeLosses = 0;
+            let lifetimeTies = 0;
+
+            history.forEach(m => {
+                lifetimePts += (m.points || 0);
+                if (m.isTie || m.rank === 0) {
+                    lifetimeTies++;
+                } else if (m.rank === 1) {
+                    lifetimeWins++;
+                } else if (m.rank > 1) {
+                    lifetimeLosses++;
+                }
+            });
+
+            await setDoc(playerRef, {
+                name: res.name.trim(),
+                totalPoints: lifetimePts,
+                wins: lifetimeWins,
+                losses: lifetimeLosses,
+                ties: lifetimeTies,
+                gamesPlayed: history.length,
+                gameHistory: history
+            }, { merge: true });
+
+        } catch (err) {
+            console.error(`Error updating player profile for ${res.name}:`, err);
         }
     }
-
+}
     async function fetchSavedLeagues() {
         const select = document.getElementById('league-select');
         if (!select) return;
@@ -956,102 +961,7 @@
         container.innerHTML = html;
     }
 
-    async function showPlayerProfile(playerName) {
-        if (!playerName) return;
-        const pName = playerName.trim();
-        const playerRef = doc(db, "players", pName);
-
-        try {
-            const docSnap = await getDoc(playerRef);
-            if (!docSnap.exists()) {
-                alert(`No lifetime profile data found for ${pName}.`);
-                return;
-            }
-
-            const data = docSnap.data();
-            const rawHistory = data.gameHistory || [];
-
-            // 1. In-Memory Deduplication via Map key
-            const seenMatches = new Map();
-
-            rawHistory.forEach(g => {
-                const rawDate = g.date || g.timestamp || '';
-                const normalizedDate = rawDate ? rawDate.slice(0, 16) : '';
-                const normLeague = (g.league || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-                const normEvent = (g.event || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-                const matchKey = `${normLeague}_${normEvent}_${g.score}_${g.rank}_${normalizedDate}`;
-
-                if (!seenMatches.has(matchKey)) {
-                    seenMatches.set(matchKey, g);
-                }
-            });
-
-            const deduplicatedHistory = Array.from(seenMatches.values());
-
-           // 2. Derive League Ranks and Standings directly from the player's deduplicated match records
-            const leagueStats = {};
-            deduplicatedHistory.forEach(m => {
-                const leagueName = (m.league || 'General').trim();
-                const normKey = leagueName.toLowerCase().replace(/[^a-z0-9]/g, '');
-
-                if (!leagueStats[normKey]) {
-                    leagueStats[normKey] = {
-                        displayName: leagueName,
-                        points: 0,
-                        games: 0
-                    };
-                }
-                leagueStats[normKey].points += (m.points || 0);
-                leagueStats[normKey].games += 1;
-            });
-
-            // Calculate current rank relative to all players in each league
-            const leagueRanks = [];
-            const leaguesSnapshot = await getDocs(collection(db, "leagues"));
-
-            leaguesSnapshot.forEach(lDoc => {
-                const lData = lDoc.data();
-                if (!lData.completedEvents) return;
-
-                const totals = {};
-                lData.completedEvents.forEach(evt => {
-                    if (!evt.results) return;
-                    evt.results.forEach(res => {
-                        totals[res.name] = (totals[res.name] || 0) + (res.points || 0);
-                    });
-                });
-
-                if (totals[pName] !== undefined) {
-                    const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-                    const rankIdx = sorted.findIndex(([name]) => name === pName);
-                    
-                    const normKey = (lData.leagueName || lDoc.id).toLowerCase().replace(/[^a-z0-9]/g, '');
-                    const stats = leagueStats[normKey] || { points: totals[pName], games: 0 };
-
-                    if (rankIdx !== -1) {
-                        leagueRanks.push({
-                            displayName: lData.leagueName || lDoc.id,
-                            rank: rankIdx + 1,
-                            points: stats.points,
-                            games: stats.games
-                        });
-                    }
-                }
-            });
-
-            const leagueRanksHtml = leagueRanks.length > 0 
-                ? leagueRanks.map(l => `
-                    <div style="background: var(--input-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); flex: 1; min-width: 140px;">
-                        <div style="font-size: 0.85em; color: var(--text-muted);">${l.displayName}</div>
-                        <div style="font-size: 1.1em; font-weight: bold; color: var(--gold);">
-                            Rank #${l.rank} 
-                            <span style="font-size: 0.85em; font-weight: normal; color: var(--text-color);">(${l.points} pts | ${l.games} games)</span>
-                        </div>
-                    </div>
-                `).join('')
-                : '<p style="color: var(--text-muted); font-size: 0.9em;">No active league standings.</p>';
-
-            // 3. Group match history by game name
+   // 3. Group match history by game name
             const gameStats = {};
             let cleanLifetimePoints = 0;
             let cleanLifetimeWins = 0;
@@ -1064,13 +974,15 @@
                     gameStats[gName] = { wins: 0, losses: 0, ties: 0, totalPoints: 0, matches: [] };
                 }
 
-                const isWin = g.rank === 1;
-                const isLoss = g.rank > 1;
+                const isTie = g.isTie || (deduplicatedHistory.filter(other => other.event === g.event && other.date === g.date && other.rank === g.rank).length > 1);
 
-                if (isWin) {
+                if (isTie) {
+                    gameStats[gName].ties++;
+                    cleanLifetimeTies++;
+                } else if (g.rank === 1) {
                     gameStats[gName].wins++;
                     cleanLifetimeWins++;
-                } else if (isLoss) {
+                } else if (g.rank > 1) {
                     gameStats[gName].losses++;
                     cleanLifetimeLosses++;
                 }
@@ -1080,79 +992,6 @@
                 cleanLifetimePoints += pts;
                 gameStats[gName].matches.push(g);
             });
-
-            let gameAccordionHtml = Object.entries(gameStats).map(([gameName, stats], idx) => {
-                const matchesHtml = stats.matches.map(m => {
-                    const subDetails = m.subscores && Object.keys(m.subscores).length > 0
-                        ? ` (${Object.entries(m.subscores).map(([k, v]) => `${k}:${v}`).join(', ')})`
-                        : '';
-                    const dateStr = m.date ? new Date(m.date).toLocaleDateString() : '';
-                    return `
-                        <div style="padding: 6px 0; border-bottom: 1px solid #333; font-size: 0.88em;">
-                            <strong>[${m.league}]</strong> Score: <strong>${m.score}</strong>${subDetails} | Rank #${m.rank} <span style="color: var(--gold);">(+${m.points} pts)</span>
-                            <span style="color: var(--text-muted); float: right;">${dateStr}</span>
-                        </div>
-                    `;
-                }).reverse().join('');
-
-                return `
-                    <div style="background: #252525; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 8px; overflow: hidden;">
-                        <div onclick="const el = document.getElementById('game-details-${idx}'); el.style.display = el.style.display === 'none' ? 'block' : 'none';" 
-                             style="padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-                            <div>
-                                <strong style="color: var(--gold); font-size: 1.05em;">🎯 ${gameName}</strong>
-                                <span style="margin-left: 10px; font-size: 0.85em; color: var(--text-muted);">(${stats.matches.length} played)</span>
-                            </div>
-                            <div style="font-size: 0.9em;">
-                                <strong>${stats.wins}W - ${stats.losses}L - ${stats.ties}T</strong> 
-                                <span style="color: var(--accent-color); margin-left: 8px;">(+${stats.totalPoints} pts)</span>
-                                <span style="margin-left: 8px; color: var(--text-muted);">▼</span>
-                            </div>
-                        </div>
-                        <div id="game-details-${idx}" style="display: none; padding: 10px 14px; background: #1a1a1a; border-top: 1px solid var(--border-color);">
-                            ${matchesHtml}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            const modalHtml = `
-                <div id="player-modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000;">
-                    <div style="background: var(--card-bg); padding: 25px; border-radius: 8px; max-width: 580px; width: 90%; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative;">
-                        <button onclick="document.getElementById('player-modal-overlay').remove()" style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: white; font-size: 1.3em; cursor: pointer;">✖</button>
-                        <h2 style="color: var(--gold); margin-top: 0; margin-bottom: 5px;">👤 ${data.name}'s Profile</h2>
-                        <p style="margin-top: 0; color: var(--text-muted); font-size: 0.95em;">
-                            <strong>Lifetime Points:</strong> ${cleanLifetimePoints} &nbsp;|&nbsp; 
-                            <strong>Career Record:</strong> ${cleanLifetimeWins}W - ${cleanLifetimeLosses}L - ${cleanLifetimeTies}T
-                        </p>
-
-                        <!-- League Standings Section -->
-                        <h3 style="color: var(--accent-color); font-size: 1em; margin-top: 18px; margin-bottom: 8px;">🏆 League Standings</h3>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px;">
-                            ${leagueRanksHtml}
-                        </div>
-
-                        <hr style="border-color: var(--border-color); margin: 15px 0;">
-
-                        <!-- Per-Game History Breakdown -->
-                        <h3 style="color: var(--accent-color); font-size: 1em; margin-bottom: 10px;">📊 Game Breakdown & Match History</h3>
-                        <div>
-                            ${gameAccordionHtml || '<p style="color: var(--text-muted);">No recorded game history.</p>'}
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            const oldModal = document.getElementById('player-modal-overlay');
-            if (oldModal) oldModal.remove();
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-        } catch (err) {
-            console.error("Error fetching player profile:", err);
-            alert("Failed to load player profile.");
-        }
-    }
-
     // Window exposures for inline button listeners
     window.addPlayer = addPlayer;
     window.removePlayer = removePlayer;
