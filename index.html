@@ -343,23 +343,104 @@
             dateInput.value = now.toISOString().slice(0, 16);
         }
     }
+// Helper to generate consistent, sanitized Firestore document IDs
+function getSanitizedDocId(name) {
+    return name ? name.trim().replace(/[^a-zA-Z0-9_-]/g, '_') : '';
+}
+    // Inside syncLeagueToFirebase()
+async function syncLeagueToFirebase() {
+    const sanitizedDocId = getSanitizedDocId(currentLeagueName);
+    if (!sanitizedDocId) return;
 
-    async function syncLeagueToFirebase() {
-        const sanitizedDocId = currentLeagueName.trim().replace(/[/\\?%*:|"<>]/g, '_');
-        if (!sanitizedDocId) return;
-
-        const leagueRef = doc(db, "leagues", sanitizedDocId);
-        try {
-            await setDoc(leagueRef, {
-                leagueName: currentLeagueName,
-                lastUpdated: serverTimestamp(),
-                completedEvents: completedEvents
-            }, { merge: true });
-            await fetchSavedLeagues();
-        } catch (error) {
-            console.error("Error saving league to Firebase: ", error);
-        }
+    const leagueRef = doc(db, "leagues", sanitizedDocId);
+    try {
+        await setDoc(leagueRef, {
+            leagueName: currentLeagueName,
+            lastUpdated: serverTimestamp(),
+            completedEvents: completedEvents
+        }, { merge: true });
+        await fetchSavedLeagues();
+    } catch (error) {
+        console.error("Error saving league to Firebase: ", error);
     }
+}
+
+// Inside loadSelectedLeague()
+async function loadSelectedLeague() {
+    const select = document.getElementById('league-select');
+    const leagueName = select.value;
+    if (!leagueName) return;
+
+    currentLeagueName = leagueName;
+    document.getElementById('current-league-text').textContent = currentLeagueName;
+
+    const sanitizedDocId = getSanitizedDocId(leagueName);
+    const leagueRef = doc(db, "leagues", sanitizedDocId);
+
+    try {
+        const docSnap = await getDoc(leagueRef);
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+
+            completedEvents.length = 0;
+            players.length = 0;
+            events.length = 0;
+            editingIndex = null;
+
+            if (data.completedEvents) {
+                completedEvents.push(...data.completedEvents);
+
+                data.completedEvents.forEach(evt => {
+                    if (evt.eventName && !events.includes(evt.eventName)) {
+                        events.push(evt.eventName);
+                    }
+                    evt.results.forEach(res => {
+                        if (res.name && !players.includes(res.name)) {
+                            players.push(res.name);
+                        }
+                    });
+                });
+            }
+
+            renderSetupUI();
+            updateLeaderboard();
+            renderCompletedEvents();
+        }
+    } catch (err) {
+        console.error("Error loading league data:", err);
+    }
+}
+
+// Inside deleteCurrentLeague()
+async function deleteCurrentLeague() {
+    if (!confirm(`Are you sure you want to permanently delete the active league "${currentLeagueName}"?`)) {
+        return;
+    }
+
+    const sanitizedDocId = getSanitizedDocId(currentLeagueName);
+    const leagueRef = doc(db, "leagues", sanitizedDocId);
+
+    try {
+        await deleteDoc(leagueRef);
+        alert(`League "${currentLeagueName}" deleted successfully.`);
+
+        currentLeagueName = "Hellcastle Archery League";
+        document.getElementById('current-league-text').textContent = currentLeagueName;
+
+        players.length = 0;
+        events.length = 0;
+        completedEvents.length = 0;
+        editingIndex = null;
+
+        renderSetupUI();
+        updateLeaderboard();
+        renderCompletedEvents();
+        await fetchSavedLeagues();
+    } catch (err) {
+        console.error("Error deleting league:", err);
+        alert("Failed to delete league from database.");
+    }
+}
 
     async function updatePlayerProfiles(eventRecord) {
         const rankCounts = {};
@@ -422,29 +503,33 @@
     }
 
     async function fetchSavedLeagues() {
-        const select = document.getElementById('league-select');
-        if (!select) return;
+    const select = document.getElementById('league-select');
+    if (!select) return;
 
-        select.innerHTML = '<option value="">-- Select Existing League --</option>';
+    select.innerHTML = '<option value="">-- Select Existing League --</option>';
+    const seenLeagues = new Set();
 
-        try {
-            const querySnapshot = await getDocs(collection(db, "leagues"));
-            querySnapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                if (data.leagueName) {
-                    const opt = document.createElement('option');
-                    opt.value = data.leagueName;
-                    opt.textContent = data.leagueName;
-                    if (data.leagueName === currentLeagueName) {
-                        opt.selected = true;
-                    }
-                    select.appendChild(opt);
+    try {
+        const querySnapshot = await getDocs(collection(db, "leagues"));
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const name = data.leagueName || docSnap.id;
+            
+            if (name && !seenLeagues.has(name)) {
+                seenLeagues.add(name);
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                if (name === currentLeagueName) {
+                    opt.selected = true;
                 }
-            });
-        } catch (err) {
-            console.error("Error fetching leagues:", err);
-        }
+                select.appendChild(opt);
+            }
+        });
+    } catch (err) {
+        console.error("Error fetching leagues:", err);
     }
+}
 
     async function setActiveLeague() {
         const input = document.getElementById('league-name-input');
