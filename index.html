@@ -988,7 +988,7 @@
 
             const deduplicatedHistory = Array.from(seenMatches.values());
 
-            // 2. Derive League Ranks directly from the player's deduplicated match records
+           // 2. Derive League Ranks and Standings directly from the player's deduplicated match records
             const leagueStats = {};
             deduplicatedHistory.forEach(m => {
                 const leagueName = (m.league || 'General').trim();
@@ -1005,11 +1005,48 @@
                 leagueStats[normKey].games += 1;
             });
 
-            const leagueRanksHtml = Object.values(leagueStats).length > 0 
-                ? Object.values(leagueStats).map(l => `
+            // Calculate current rank relative to all players in each league
+            const leagueRanks = [];
+            const leaguesSnapshot = await getDocs(collection(db, "leagues"));
+
+            leaguesSnapshot.forEach(lDoc => {
+                const lData = lDoc.data();
+                if (!lData.completedEvents) return;
+
+                const totals = {};
+                lData.completedEvents.forEach(evt => {
+                    if (!evt.results) return;
+                    evt.results.forEach(res => {
+                        totals[res.name] = (totals[res.name] || 0) + (res.points || 0);
+                    });
+                });
+
+                if (totals[pName] !== undefined) {
+                    const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+                    const rankIdx = sorted.findIndex(([name]) => name === pName);
+                    
+                    const normKey = (lData.leagueName || lDoc.id).toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const stats = leagueStats[normKey] || { points: totals[pName], games: 0 };
+
+                    if (rankIdx !== -1) {
+                        leagueRanks.push({
+                            displayName: lData.leagueName || lDoc.id,
+                            rank: rankIdx + 1,
+                            points: stats.points,
+                            games: stats.games
+                        });
+                    }
+                }
+            });
+
+            const leagueRanksHtml = leagueRanks.length > 0 
+                ? leagueRanks.map(l => `
                     <div style="background: var(--input-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); flex: 1; min-width: 140px;">
                         <div style="font-size: 0.85em; color: var(--text-muted);">${l.displayName}</div>
-                        <div style="font-size: 1.1em; font-weight: bold; color: var(--gold);">${l.points} pts <span style="font-size: 0.8em; font-weight: normal; color: var(--text-color);">(${l.games} games)</span></div>
+                        <div style="font-size: 1.1em; font-weight: bold; color: var(--gold);">
+                            Rank #${l.rank} 
+                            <span style="font-size: 0.85em; font-weight: normal; color: var(--text-color);">(${l.points} pts | ${l.games} games)</span>
+                        </div>
                     </div>
                 `).join('')
                 : '<p style="color: var(--text-muted); font-size: 0.9em;">No active league standings.</p>';
