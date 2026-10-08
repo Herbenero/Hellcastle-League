@@ -726,53 +726,62 @@
 
     // --- Standings & Logs Rendering ---
     function updateLeaderboard() {
-      const totals = {};
+    const totals = {};
 
-      completedEvents.forEach(evt => {
+    completedEvents.forEach(evt => {
+        // Count how many players share each rank to detect ties
         const rankCounts = {};
         evt.results.forEach(res => {
-          rankCounts[res.rank] = (rankCounts[res.rank] || 0) + 1;
+            rankCounts[res.rank] = (rankCounts[res.rank] || 0) + 1;
         });
 
+        // Record points and result tallies for each participant
         evt.results.forEach(res => {
-          if (!totals[res.name]) {
-            totals[res.name] = { points: 0, wins: 0, losses: 0, ties: 0 };
-          }
-          totals[res.name].points += res.points || 0;
+            if (!totals[res.name]) {
+                totals[res.name] = { points: 0, wins: 0, losses: 0, ties: 0 };
+            }
+            totals[res.name].points += res.points || 0;
 
-          const isTie = rankCounts[res.rank] > 1;
-
-          if (isTie) {
-            totals[res.name].ties++;
-          }
-
-          if (res.rank === 1) {
-            totals[res.name].wins++;
-          } else {
-            totals[res.name].losses++;
-          }
+            const isTie = rankCounts[res.rank] > 1;
+            if (isTie) {
+                totals[res.name].ties++;
+            } else if (res.rank === 1) {
+                totals[res.name].wins++;
+            } else {
+                totals[res.name].losses++;
+            }
         });
-      });
+    });
 
-      const leaderboardArray = Object.keys(totals).map(name => ({
-        name,
-        ...totals[name]
-      })).sort((a, b) => b.points - a.points);
+    // Convert to array and sort by total points descending
+    const leaderboardData = Object.keys(totals).map(name => ({
+        name: name,
+        points: totals[name].points,
+        wins: totals[name].wins,
+        losses: totals[name].losses,
+        ties: totals[name].ties
+    }));
 
-      const tbody = document.getElementById('leaderboard-body');
-      if (tbody) {
-        tbody.innerHTML = leaderboardArray.map((entry, idx) => `
-          <tr>
+    leaderboardData.sort((a, b) => b.points - a.points);
+
+    // Render leaderboard rows
+    const tbody = document.querySelector('#leaderboard-table tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    leaderboardData.forEach((player, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
             <td>${idx + 1}</td>
-            <td>${entry.name}</td>
-            <td><strong>${entry.points}</strong></td>
-            <td>${entry.wins}</td>
-            <td>${entry.losses}</td>
-            <td>${entry.ties}</td>
-          </tr>
-        `).join('');
-      }
-    }
+            <td><strong>${player.name}</strong></td>
+            <td><strong>${player.points}</strong></td>
+            <td>${player.wins}</td>
+            <td>${player.losses}</td>
+            <td>${player.ties}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
 
     function renderCompletedEvents() {
       const container = document.getElementById('completed-events-log');
