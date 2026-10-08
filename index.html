@@ -832,24 +832,64 @@ window.calcSnapTotal = function(player) {
     });
 }
     function renderCompletedEvents() {
-      const container = document.getElementById('completed-events-log');
-      if (container) {
-        container.innerHTML = completedEvents.map((evt, idx) => `
-          <div class="event-card">
-            <div class="event-header">
-              <h3 style="margin: 0;">${evt.eventName} <small>(${new Date(evt.timestamp).toLocaleString()})</small></h3>
-              <div class="event-actions">
-                <button onclick="editEvent(${idx})">✏️ Edit</button>
-                <button class="btn-danger" onclick="deleteEvent(${idx})">🗑️ Delete</button>
-              </div>
-            </div>
-            <ul>
-              ${evt.results.map(r => `<li>${r.rank}.${r.name} - ${r.score} (${r.points} pts)</li>`).join('')}
-            </ul>
-          </div>
-        `).join('');
-      }
+    const container = document.getElementById('completed-events-log');
+    if (!container) return;
+
+    if (completedEvents.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted);">No completed events yet.</p>';
+        return;
     }
+
+    let html = '';
+    
+    // Display newest completed events first
+    [...completedEvents].reverse().forEach((evt, revIdx) => {
+        const actualIdx = completedEvents.length - 1 - revIdx;
+        const eventDate = evt.date ? new Date(evt.date).toLocaleString() : '';
+
+        html += `
+            <div class="event-card">
+                <div class="event-header">
+                    <strong>${evt.eventName} <span style="font-weight: normal; color: var(--text-muted); font-size: 0.9em;">(${eventDate})</span></strong>
+                    <div class="event-actions">
+                        <button style="background: #4caf50;" onclick="editEvent(${actualIdx})">✏️ Edit</button>
+                        <button class="btn-danger" onclick="deleteEvent(${actualIdx})">🗑️ Delete</button>
+                    </div>
+                </div>
+                <ul style="margin: 5px 0 0 0; padding-left: 20px;">
+        `;
+
+        evt.results.forEach(res => {
+            let subscoresText = '';
+            
+            // Format subscores if available on the result object
+            if (res.subscores && Object.keys(res.subscores).length > 0) {
+                const subDetails = Object.entries(res.subscores)
+                    .filter(([_, val]) => val !== '' && val !== null && !isNaN(val))
+                    .map(([key, val]) => `${key}: ${val}`)
+                    .join(', ');
+                
+                if (subDetails) {
+                    subscoresText = ` <span style="color: var(--text-muted); font-size: 0.9em;">(${subDetails})</span>`;
+                }
+            }
+
+            html += `
+                <li>
+                    <strong>${res.rank}. ${res.name}</strong> - <strong>${res.score}</strong> total${subscoresText} 
+                    <span style="color: var(--gold); font-weight: bold;">(+${res.points || 0} pts)</span>
+                </li>
+            `;
+        });
+
+        html += `
+                </ul>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
 
     // EXPOSE ALL FUNCTIONS TO WINDOW SCOPE FOR INLINE HTML HANDLERS
     window.setActiveLeague = setActiveLeague;
