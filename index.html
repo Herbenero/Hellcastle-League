@@ -315,11 +315,9 @@
       doc, 
       setDoc, 
       getDoc, 
-      updateDoc, 
       deleteDoc, 
       collection, 
       getDocs, 
-      arrayUnion, 
       serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -381,6 +379,9 @@
         rankCounts[res.rank] = (rankCounts[res.rank] || 0) + 1;
       });
 
+      // Stable match identifier for this event
+      const matchKey = `${currentLeagueName}_${eventRecord.eventName}_${eventRecord.date || eventRecord.timestamp}`.trim().toLowerCase();
+
       for (const res of eventRecord.results) {
         const playerRef = doc(db, "players", res.name.trim());
         const isTie = rankCounts[res.rank] > 1;
@@ -388,45 +389,58 @@
         const isLoss = res.rank > 1;
         const isTieStat = isTie && res.rank === 1;
 
+        const newMatchEntry = {
+          matchId: matchKey,
+          event: eventRecord.eventName,
+          league: currentLeagueName,
+          score: res.score,
+          rank: res.rank,
+          points: res.points || 0,
+          subscores: res.subscores || {},
+          date: eventRecord.date || eventRecord.timestamp
+        };
+
         try {
           const docSnap = await getDoc(playerRef);
-          if (!docSnap.exists()) {
-            await setDoc(playerRef, {
-              name: res.name,
-              totalPoints: res.points || 0,
-              wins: isWin ? 1 : 0,
-              losses: isLoss ? 1 : 0,
-              ties: isTieStat ? 1 : 0,
-              gamesPlayed: 1,
-              gameHistory: [{
-                event: eventRecord.eventName,
-                league: currentLeagueName,
-                score: res.score,
-                rank: res.rank,
-                points: res.points,
-                subscores: res.subscores || {},
-                date: eventRecord.date || eventRecord.timestamp
-              }]
-            });
-          } else {
-            const current = docSnap.data();
-            await updateDoc(playerRef, {
-              totalPoints: (current.totalPoints || 0) + (res.points || 0),
-              wins: (current.wins || 0) + (isWin ? 1 : 0),
-              losses: (current.losses || 0) + (isLoss ? 1 : 0),
-              ties: (current.ties || 0) + (isTieStat ? 1 : 0),
-              gamesPlayed: (current.gamesPlayed || 0) + 1,
-              gameHistory: arrayUnion({
-                event: eventRecord.eventName,
-                league: currentLeagueName,
-                score: res.score,
-                rank: res.rank,
-                points: res.points,
-                subscores: res.subscores || {},
-                date: eventRecord.date || eventRecord.timestamp
-              })
-            });
+          let history = [];
+          if (docSnap.exists()) {
+            history = docSnap.data().gameHistory || [];
           }
+
+          // Replace if already exists with same matchKey, otherwise push
+          const existingIdx = history.findIndex(h => {
+            const hKey = h.matchId || `${h.league}_${h.event}_${h.date}`.trim().toLowerCase();
+            return hKey === matchKey;
+          });
+
+          if (existingIdx > -1) {
+            history[existingIdx] = newMatchEntry;
+          } else {
+            history.push(newMatchEntry);
+          }
+
+          // Recalculate lifetime stats directly from deduplicated history
+          let lifetimePts = 0;
+          let lifetimeWins = 0;
+          let lifetimeLosses = 0;
+          let lifetimeTies = 0;
+
+          history.forEach(m => {
+            lifetimePts += (m.points || 0);
+            if (m.rank === 1) lifetimeWins++;
+            else if (m.rank > 1) lifetimeLosses++;
+          });
+
+          await setDoc(playerRef, {
+            name: res.name.trim(),
+            totalPoints: lifetimePts,
+            wins: lifetimeWins,
+            losses: lifetimeLosses,
+            ties: lifetimeTies,
+            gamesPlayed: history.length,
+            gameHistory: history
+          }, { merge: true });
+
         } catch (err) {
           console.error(`Error updating player profile for ${res.name}:`, err);
         }
@@ -496,7 +510,6 @@
 
       try {
         let docSnap = await getDoc(leagueRef);
-        // Fallback check if older documents used different capitalization in doc IDs
         if (!docSnap.exists()) {
           const allLeaguesSnap = await getDocs(collection(db, "leagues"));
           for (const lDoc of allLeaguesSnap.docs) {
@@ -550,7 +563,6 @@
       try {
         await deleteDoc(leagueRef);
 
-        // Also clean up any legacy document IDs with raw name casing
         const legacyRef = doc(db, "leagues", currentLeagueName.trim().replace(/[^a-zA-Z0-9_-]/g, '_'));
         if (legacyRef.id !== sanitizedDocId) {
           try { await deleteDoc(legacyRef); } catch(_) {}
@@ -963,13 +975,12 @@
         }
 
         const data = docSnap.data();
-        const history = data.gameHistory || [];
+        const rawHistory = data.gameHistory || [];
 
         // 1. Calculate League Ranks across all Firestore leagues with deduplication & aggregation
         const leaguesSnapshot = await getDocs(collection(db, "leagues"));
         const unifiedLeagues = {};
 
-        // Merge league documents by canonical league name (e.g., handles "HAAL #1" across multiple docs)
         leaguesSnapshot.forEach(lDoc => {
           const lData = lDoc.data();
           if (!lData.completedEvents || !Array.isArray(lData.completedEvents)) return;
@@ -985,7 +996,6 @@
             };
           }
 
-          // In case documents are duplicate snapshots, choose the one with more events
           if (lData.completedEvents.length > unifiedLeagues[key].events.length) {
             unifiedLeagues[key].events = lData.completedEvents;
           }
@@ -1022,9 +1032,29 @@
           </div>
         `).join('') : '<p style="color: var(--text-muted); font-size: 0.9em;">No active league standings.</p>';
 
-        // 2. Group games by unique game name and aggregate stats
+        // 2. In-memory Deduplication of Match History (cleans up any existing database duplicates)
+        const seenMatches = new Set();
+        const deduplicatedHistory = [];
+
+        rawHistory.forEach(g => {
+          // Normalize timestamp/date to a date-only or minute-level string to catch re-submissions
+          const dStr = g.date ? g.date.slice(0, 16) : '';
+          const matchFingerprint = `${g.league || ''}_${g.event || ''}_${g.score}_${g.rank}_${dStr}`.toLowerCase();
+
+          if (!seenMatches.has(matchFingerprint)) {
+            seenMatches.add(matchFingerprint);
+            deduplicatedHistory.push(g);
+          }
+        });
+
+        // Group games by unique game name and aggregate stats from clean history
         const gameStats = {};
-        history.forEach(g => {
+        let cleanLifetimePoints = 0;
+        let cleanLifetimeWins = 0;
+        let cleanLifetimeLosses = 0;
+        let cleanLifetimeTies = 0;
+
+        deduplicatedHistory.forEach(g => {
           const gName = g.event;
           if (!gameStats[gName]) {
             gameStats[gName] = {
@@ -1039,10 +1069,18 @@
           const isWin = g.rank === 1;
           const isLoss = g.rank > 1;
 
-          if (isWin) gameStats[gName].wins++;
-          else if (isLoss) gameStats[gName].losses++;
+          if (isWin) {
+            gameStats[gName].wins++;
+            cleanLifetimeWins++;
+          } else if (isLoss) {
+            gameStats[gName].losses++;
+            cleanLifetimeLosses++;
+          }
 
-          gameStats[gName].totalPoints += (g.points || 0);
+          const pts = (g.points || 0);
+          gameStats[gName].totalPoints += pts;
+          cleanLifetimePoints += pts;
+
           gameStats[gName].matches.push(g);
         });
 
@@ -1088,7 +1126,7 @@
               <button onclick="document.getElementById('player-modal-overlay').remove()" style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: white; font-size: 1.3em; cursor: pointer;">✖</button>
               <h2 style="color: var(--gold); margin-top: 0; margin-bottom: 5px;">👤 ${data.name}'s Profile</h2>
               <p style="margin-top: 0; color: var(--text-muted); font-size: 0.95em;">
-                <strong>Lifetime Points:</strong> ${data.totalPoints || 0} &nbsp;|&nbsp; <strong>Career Record:</strong> ${data.wins || 0}W - ${data.losses || 0}L - ${data.ties || 0}T
+                <strong>Lifetime Points:</strong> ${cleanLifetimePoints} &nbsp;|&nbsp; <strong>Career Record:</strong> ${cleanLifetimeWins}W - ${cleanLifetimeLosses}L - ${cleanLifetimeTies}T
               </p>
 
               <!-- League Standings Section -->
