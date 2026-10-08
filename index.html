@@ -571,38 +571,87 @@
     }
 
     function renderScoreInputs(prefillData = null) {
-      const container = document.getElementById('score-inputs-container');
-      const eventSelect = document.getElementById('event-select');
-      if (!eventSelect || !container) return;
-      
-      const eventName = eventSelect.value;
+    const container = document.getElementById('score-inputs-container');
+    const eventSelect = document.getElementById('event-select');
+    if (!eventSelect || !container) return;
 
-      if (!eventName || players.length === 0) {
+    const eventName = eventSelect.value;
+    if (!eventName || players.length === 0) {
         container.innerHTML = '';
         return;
-      }
-
-      let html = '<div style="margin-top: 15px;">';
-      players.forEach(p => {
-        let existingScore = '';
-        if (prefillData && prefillData.results) {
-          const match = prefillData.results.find(r => r.name === p);
-          if (match) existingScore = match.score;
-        }
-
-        html += `
-          <div class="form-group" style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-            <label style="width: 150px; margin: 0;">${p}</label>
-            <input type="number" class="player-score-field" data-player="${p}" value="${existingScore}" placeholder="Enter score">
-          </div>
-        `;
-      });
-
-      const btnLabel = editingIndex !== null ? 'Update Event Scores' : 'Submit Scores';
-      html += `<button onclick="submitEventScores()">${btnLabel}</button></div>`;
-      container.innerHTML = html;
     }
 
+    const isJdcJr = eventName === "JDC Jr";
+    const isSnapshot = eventName === "Snapshot";
+
+    let html = '<div style="margin-top: 15px;">';
+
+    players.forEach(p => {
+        let existingScore = '';
+        if (prefillData && prefillData.results) {
+            const match = prefillData.results.find(r => r.name === p);
+            if (match) existingScore = match.score;
+        }
+
+        if (isJdcJr) {
+            html += `
+                <div class="card" style="margin-bottom: 10px; padding: 12px; background: #222;">
+                    <strong>${p}</strong>
+                    <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                        <input type="number" class="jdc-sub" data-player="${p}" placeholder="Coloring Book" style="flex: 1; min-width: 100px;" oninput="calcJdcTotal('${p}')">
+                        <input type="number" class="jdc-sub" data-player="${p}" placeholder="Bit of Bully" style="flex: 1; min-width: 100px;" oninput="calcJdcTotal('${p}')">
+                        <input type="number" class="jdc-sub" data-player="${p}" placeholder="Race to 180" style="flex: 1; min-width: 100px;" oninput="calcJdcTotal('${p}')">
+                        <input type="number" class="player-score-field" id="total-${p}" data-player="${p}" value="${existingScore}" placeholder="Total" style="flex: 1; min-width: 100px; font-weight: bold; border-color: var(--gold);" readonly>
+                    </div>
+                </div>
+            `;
+        } else if (isSnapshot) {
+            html += `
+                <div class="card" style="margin-bottom: 10px; padding: 12px; background: #222;">
+                    <strong>${p}</strong>
+                    <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                        <input type="number" class="snap-sub" data-player="${p}" placeholder="Flash Point" style="flex: 1; min-width: 100px;" oninput="calcSnapTotal('${p}')">
+                        <input type="number" class="snap-sub" data-player="${p}" placeholder="9 Dart Century" style="flex: 1; min-width: 100px;" oninput="calcSnapTotal('${p}')">
+                        <input type="number" class="snap-sub" data-player="${p}" placeholder="Quick Draw" style="flex: 1; min-width: 100px;" oninput="calcSnapTotal('${p}')">
+                        <input type="number" class="player-score-field" id="total-${p}" data-player="${p}" value="${existingScore}" placeholder="Total" style="flex: 1; min-width: 100px; font-weight: bold; border-color: var(--gold);" readonly>
+                    </div>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="form-group" style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                    <label style="width: 150px; margin: 0;">${p}</label>
+                    <input type="number" class="player-score-field" data-player="${p}" value="${existingScore}" placeholder="Enter score">
+                </div>
+            `;
+        }
+    });
+
+    const btnLabel = editingIndex !== null ? 'Update Event Scores' : 'Submit Scores';
+    html += `<button onclick="submitEventScores()">${btnLabel}</button></div>`;
+    container.innerHTML = html;
+}
+
+// Helper calculation functions
+window.calcJdcTotal = function(player) {
+    const inputs = document.querySelectorAll(`.jdc-sub[data-player="${player}"]`);
+    let sum = 0;
+    inputs.forEach(i => {
+        sum += parseFloat(i.value) || 0;
+    });
+    const totalElem = document.getElementById(`total-${player}`);
+    if (totalElem) totalElem.value = sum;
+};
+
+window.calcSnapTotal = function(player) {
+    const inputs = document.querySelectorAll(`.snap-sub[data-player="${player}"]`);
+    let sum = 0;
+    inputs.forEach(i => {
+        sum += parseFloat(i.value) || 0;
+    });
+    const totalElem = document.getElementById(`total-${player}`);
+    if (totalElem) totalElem.value = sum;
+};
     // --- Score Submission Logic ---
     function submitEventScores() {
       const eventName = document.getElementById('event-select').value;
