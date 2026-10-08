@@ -343,104 +343,28 @@
             dateInput.value = now.toISOString().slice(0, 16);
         }
     }
-// Helper to generate consistent, sanitized Firestore document IDs
-function getSanitizedDocId(name) {
-    return name ? name.trim().replace(/[^a-zA-Z0-9_-]/g, '_') : '';
-}
-    // Inside syncLeagueToFirebase()
-async function syncLeagueToFirebase() {
-    const sanitizedDocId = getSanitizedDocId(currentLeagueName);
-    if (!sanitizedDocId) return;
 
-    const leagueRef = doc(db, "leagues", sanitizedDocId);
-    try {
-        await setDoc(leagueRef, {
-            leagueName: currentLeagueName,
-            lastUpdated: serverTimestamp(),
-            completedEvents: completedEvents
-        }, { merge: true });
-        await fetchSavedLeagues();
-    } catch (error) {
-        console.error("Error saving league to Firebase: ", error);
+    // Helper to generate consistent, sanitized Firestore document IDs
+    function getSanitizedDocId(name) {
+        return name ? name.trim().replace(/[^a-zA-Z0-9_-]/g, '_') : '';
     }
-}
 
-// Inside loadSelectedLeague()
-async function loadSelectedLeague() {
-    const select = document.getElementById('league-select');
-    const leagueName = select.value;
-    if (!leagueName) return;
+    async function syncLeagueToFirebase() {
+        const sanitizedDocId = getSanitizedDocId(currentLeagueName);
+        if (!sanitizedDocId) return;
 
-    currentLeagueName = leagueName;
-    document.getElementById('current-league-text').textContent = currentLeagueName;
-
-    const sanitizedDocId = getSanitizedDocId(leagueName);
-    const leagueRef = doc(db, "leagues", sanitizedDocId);
-
-    try {
-        const docSnap = await getDoc(leagueRef);
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-
-            completedEvents.length = 0;
-            players.length = 0;
-            events.length = 0;
-            editingIndex = null;
-
-            if (data.completedEvents) {
-                completedEvents.push(...data.completedEvents);
-
-                data.completedEvents.forEach(evt => {
-                    if (evt.eventName && !events.includes(evt.eventName)) {
-                        events.push(evt.eventName);
-                    }
-                    evt.results.forEach(res => {
-                        if (res.name && !players.includes(res.name)) {
-                            players.push(res.name);
-                        }
-                    });
-                });
-            }
-
-            renderSetupUI();
-            updateLeaderboard();
-            renderCompletedEvents();
+        const leagueRef = doc(db, "leagues", sanitizedDocId);
+        try {
+            await setDoc(leagueRef, {
+                leagueName: currentLeagueName,
+                lastUpdated: serverTimestamp(),
+                completedEvents: completedEvents
+            }, { merge: true });
+            await fetchSavedLeagues();
+        } catch (error) {
+            console.error("Error saving league to Firebase: ", error);
         }
-    } catch (err) {
-        console.error("Error loading league data:", err);
     }
-}
-
-// Inside deleteCurrentLeague()
-async function deleteCurrentLeague() {
-    if (!confirm(`Are you sure you want to permanently delete the active league "${currentLeagueName}"?`)) {
-        return;
-    }
-
-    const sanitizedDocId = getSanitizedDocId(currentLeagueName);
-    const leagueRef = doc(db, "leagues", sanitizedDocId);
-
-    try {
-        await deleteDoc(leagueRef);
-        alert(`League "${currentLeagueName}" deleted successfully.`);
-
-        currentLeagueName = "Hellcastle Archery League";
-        document.getElementById('current-league-text').textContent = currentLeagueName;
-
-        players.length = 0;
-        events.length = 0;
-        completedEvents.length = 0;
-        editingIndex = null;
-
-        renderSetupUI();
-        updateLeaderboard();
-        renderCompletedEvents();
-        await fetchSavedLeagues();
-    } catch (err) {
-        console.error("Error deleting league:", err);
-        alert("Failed to delete league from database.");
-    }
-}
 
     async function updatePlayerProfiles(eventRecord) {
         const rankCounts = {};
@@ -503,33 +427,33 @@ async function deleteCurrentLeague() {
     }
 
     async function fetchSavedLeagues() {
-    const select = document.getElementById('league-select');
-    if (!select) return;
+        const select = document.getElementById('league-select');
+        if (!select) return;
 
-    select.innerHTML = '<option value="">-- Select Existing League --</option>';
-    const seenLeagues = new Set();
+        select.innerHTML = '<option value="">-- Select Existing League --</option>';
+        const seenLeagues = new Set();
 
-    try {
-        const querySnapshot = await getDocs(collection(db, "leagues"));
-        querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            const name = data.leagueName || docSnap.id;
-            
-            if (name && !seenLeagues.has(name)) {
-                seenLeagues.add(name);
-                const opt = document.createElement('option');
-                opt.value = name;
-                opt.textContent = name;
-                if (name === currentLeagueName) {
-                    opt.selected = true;
+        try {
+            const querySnapshot = await getDocs(collection(db, "leagues"));
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const name = data.leagueName || docSnap.id;
+
+                if (name && !seenLeagues.has(name)) {
+                    seenLeagues.add(name);
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    if (name === currentLeagueName) {
+                        opt.selected = true;
+                    }
+                    select.appendChild(opt);
                 }
-                select.appendChild(opt);
-            }
-        });
-    } catch (err) {
-        console.error("Error fetching leagues:", err);
+            });
+        } catch (err) {
+            console.error("Error fetching leagues:", err);
+        }
     }
-}
 
     async function setActiveLeague() {
         const input = document.getElementById('league-name-input');
@@ -563,7 +487,7 @@ async function deleteCurrentLeague() {
         currentLeagueName = leagueName;
         document.getElementById('current-league-text').textContent = currentLeagueName;
 
-        const sanitizedDocId = leagueName.trim().replace(/[/\\?%*:|"<>]/g, '_');
+        const sanitizedDocId = getSanitizedDocId(leagueName);
         const leagueRef = doc(db, "leagues", sanitizedDocId);
 
         try {
@@ -605,7 +529,7 @@ async function deleteCurrentLeague() {
             return;
         }
 
-        const sanitizedDocId = currentLeagueName.trim().replace(/[/\\?%*:|"<>]/g, '_');
+        const sanitizedDocId = getSanitizedDocId(currentLeagueName);
         const leagueRef = doc(db, "leagues", sanitizedDocId);
 
         try {
@@ -1010,156 +934,156 @@ async function deleteCurrentLeague() {
         container.innerHTML = html;
     }
 
-   async function showPlayerProfile(playerName) {
-    if (!playerName) return;
-    const pName = playerName.trim();
-    const playerRef = doc(db, "players", pName);
+    async function showPlayerProfile(playerName) {
+        if (!playerName) return;
+        const pName = playerName.trim();
+        const playerRef = doc(db, "players", pName);
 
-    try {
-        const docSnap = await getDoc(playerRef);
-        if (!docSnap.exists()) {
-            alert(`No lifetime profile data found for ${pName}.`);
-            return;
-        }
+        try {
+            const docSnap = await getDoc(playerRef);
+            if (!docSnap.exists()) {
+                alert(`No lifetime profile data found for ${pName}.`);
+                return;
+            }
 
-        const data = docSnap.data();
-        const history = data.gameHistory || [];
+            const data = docSnap.data();
+            const history = data.gameHistory || [];
 
-        // 1. Calculate League Ranks across all Firestore leagues
-        const leagueRanks = [];
-        const leaguesSnapshot = await getDocs(collection(db, "leagues"));
+            // 1. Calculate League Ranks across all Firestore leagues
+            const leagueRanks = [];
+            const leaguesSnapshot = await getDocs(collection(db, "leagues"));
 
-        leaguesSnapshot.forEach(lDoc => {
-            const lData = lDoc.data();
-            if (!lData.completedEvents) return;
+            leaguesSnapshot.forEach(lDoc => {
+                const lData = lDoc.data();
+                if (!lData.completedEvents) return;
 
-            const totals = {};
-            lData.completedEvents.forEach(evt => {
-                evt.results.forEach(res => {
-                    totals[res.name] = (totals[res.name] || 0) + (res.points || 0);
+                const totals = {};
+                lData.completedEvents.forEach(evt => {
+                    evt.results.forEach(res => {
+                        totals[res.name] = (totals[res.name] || 0) + (res.points || 0);
+                    });
                 });
+
+                if (totals[pName] !== undefined) {
+                    const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+                    const rankIdx = sorted.findIndex(([name]) => name === pName);
+                    if (rankIdx !== -1) {
+                        leagueRanks.push({
+                            league: lData.leagueName || lDoc.id,
+                            rank: rankIdx + 1,
+                            points: totals[pName],
+                            totalPlayers: sorted.length
+                        });
+                    }
+                }
             });
 
-            if (totals[pName] !== undefined) {
-                const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-                const rankIdx = sorted.findIndex(([name]) => name === pName);
-                if (rankIdx !== -1) {
-                    leagueRanks.push({
-                        league: lData.leagueName || lDoc.id,
-                        rank: rankIdx + 1,
-                        points: totals[pName],
-                        totalPlayers: sorted.length
-                    });
+            const leagueRanksHtml = leagueRanks.length > 0 
+                ? leagueRanks.map(r => `
+                    <div style="background: var(--input-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); flex: 1; min-width: 140px;">
+                        <div style="font-size: 0.85em; color: var(--text-muted);">${r.league}</div>
+                        <div style="font-size: 1.1em; font-weight: bold; color: var(--gold);">Rank #${r.rank} <span style="font-size: 0.8em; font-weight: normal; color: var(--text-color);">(${r.points} pts)</span></div>
+                    </div>
+                `).join('')
+                : '<p style="color: var(--text-muted); font-size: 0.9em;">No active league standings.</p>';
+
+            // 2. Group games by unique game name and aggregate stats
+            const gameStats = {};
+            history.forEach(g => {
+                const gName = g.event;
+                if (!gameStats[gName]) {
+                    gameStats[gName] = {
+                        wins: 0,
+                        losses: 0,
+                        ties: 0,
+                        totalPoints: 0,
+                        matches: []
+                    };
                 }
-            }
-        });
 
-        const leagueRanksHtml = leagueRanks.length > 0 
-            ? leagueRanks.map(r => `
-                <div style="background: var(--input-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); flex: 1; min-width: 140px;">
-                    <div style="font-size: 0.85em; color: var(--text-muted);">${r.league}</div>
-                    <div style="font-size: 1.1em; font-weight: bold; color: var(--gold);">Rank #${r.rank} <span style="font-size: 0.8em; font-weight: normal; color: var(--text-color);">(${r.points} pts)</span></div>
-                </div>
-            `).join('')
-            : '<p style="color: var(--text-muted); font-size: 0.9em;">No active league standings.</p>';
+                const isWin = g.rank === 1;
+                const isLoss = g.rank > 1;
 
-        // 2. Group games by unique game name and aggregate stats
-        const gameStats = {};
-        history.forEach(g => {
-            const gName = g.event;
-            if (!gameStats[gName]) {
-                gameStats[gName] = {
-                    wins: 0,
-                    losses: 0,
-                    ties: 0,
-                    totalPoints: 0,
-                    matches: []
-                };
-            }
+                if (isWin) gameStats[gName].wins++;
+                else if (isLoss) gameStats[gName].losses++;
 
-            const isWin = g.rank === 1;
-            const isLoss = g.rank > 1;
+                gameStats[gName].totalPoints += g.points || 0;
+                gameStats[gName].matches.push(g);
+            });
 
-            if (isWin) gameStats[gName].wins++;
-            else if (isLoss) gameStats[gName].losses++;
+            let gameAccordionHtml = Object.entries(gameStats).map(([gameName, stats], idx) => {
+                const matchesHtml = stats.matches.map(m => {
+                    const subDetails = m.subscores && Object.keys(m.subscores).length > 0
+                        ? ` (${Object.entries(m.subscores).map(([k, v]) => `${k}:${v}`).join(', ')})`
+                        : '';
+                    const dateStr = m.date ? new Date(m.date).toLocaleDateString() : '';
+                    return `
+                        <div style="padding: 6px 0; border-bottom: 1px solid #333; font-size: 0.88em;">
+                            <strong>[${m.league}]</strong> Score: <strong>${m.score}</strong>${subDetails} | Rank #${m.rank} <span style="color: var(--gold);">(+${m.points} pts)</span>
+                            <span style="color: var(--text-muted); float: right;">${dateStr}</span>
+                        </div>
+                    `;
+                }).reverse().join('');
 
-            gameStats[gName].totalPoints += g.points || 0;
-            gameStats[gName].matches.push(g);
-        });
-
-        // Build HTML for grouped clickable game history
-        let gameAccordionHtml = Object.entries(gameStats).map(([gameName, stats], idx) => {
-            const matchesHtml = stats.matches.map(m => {
-                const subDetails = m.subscores && Object.keys(m.subscores).length > 0
-                    ? ` (${Object.entries(m.subscores).map(([k, v]) => `${k}:${v}`).join(', ')})`
-                    : '';
-                const dateStr = m.date ? new Date(m.date).toLocaleDateString() : '';
                 return `
-                    <div style="padding: 6px 0; border-bottom: 1px solid #333; font-size: 0.88em;">
-                        <strong>[${m.league}]</strong> Score: <strong>${m.score}</strong>${subDetails} | Rank #${m.rank} <span style="color: var(--gold);">(+${m.points} pts)</span>
-                        <span style="color: var(--text-muted); float: right;">${dateStr}</span>
+                    <div style="background: #252525; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 8px; overflow: hidden;">
+                        <div onclick="const el = document.getElementById('game-details-${idx}'); el.style.display = el.style.display === 'none' ? 'block' : 'none';" 
+                             style="padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+                            <div>
+                                <strong style="color: var(--gold); font-size: 1.05em;">🎯 ${gameName}</strong>
+                                <span style="margin-left: 10px; font-size: 0.85em; color: var(--text-muted);">(${stats.matches.length} played)</span>
+                            </div>
+                            <div style="font-size: 0.9em;">
+                                <strong>${stats.wins}W - ${stats.losses}L - ${stats.ties}T</strong> 
+                                <span style="color: var(--accent-color); margin-left: 8px;">(+${stats.totalPoints} pts)</span>
+                                <span style="margin-left: 8px; color: var(--text-muted);">▼</span>
+                            </div>
+                        </div>
+                        <div id="game-details-${idx}" style="display: none; padding: 10px 14px; background: #1a1a1a; border-top: 1px solid var(--border-color);">
+                            ${matchesHtml}
+                        </div>
                     </div>
                 `;
-            }).reverse().join('');
+            }).join('');
 
-            return `
-                <div style="background: #252525; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 8px; overflow: hidden;">
-                    <div onclick="const el = document.getElementById('game-details-${idx}'); el.style.display = el.style.display === 'none' ? 'block' : 'none';" 
-                         style="padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+            const modalHtml = `
+                <div id="player-modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000;">
+                    <div style="background: var(--card-bg); padding: 25px; border-radius: 8px; max-width: 580px; width: 90%; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative;">
+                        <button onclick="document.getElementById('player-modal-overlay').remove()" style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: white; font-size: 1.3em; cursor: pointer;">✖</button>
+                        
+                        <h2 style="color: var(--gold); margin-top: 0; margin-bottom: 5px;">👤 ${data.name}'s Profile</h2>
+                        <p style="margin-top: 0; color: var(--text-muted); font-size: 0.95em;">
+                            <strong>Lifetime Points:</strong> ${data.totalPoints || 0} &nbsp;|&nbsp; 
+                            <strong>Career Record:</strong> ${data.wins || 0}W - ${data.losses || 0}L - ${data.ties || 0}T
+                        </p>
+
+                        <!-- League Standings Section -->
+                        <h3 style="color: var(--accent-color); font-size: 1em; margin-top: 18px; margin-bottom: 8px;">🏆 League Standings</h3>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px;">
+                            ${leagueRanksHtml}
+                        </div>
+
+                        <hr style="border-color: var(--border-color); margin: 15px 0;">
+
+                        <!-- Per-Game History Breakdown -->
+                        <h3 style="color: var(--accent-color); font-size: 1em; margin-bottom: 10px;">📊 Game Breakdown & Match History</h3>
                         <div>
-                            <strong style="color: var(--gold); font-size: 1.05em;">🎯 ${gameName}</strong>
-                            <span style="margin-left: 10px; font-size: 0.85em; color: var(--text-muted);">(${stats.matches.length} played)</span>
+                            ${gameAccordionHtml || '<p style="color: var(--text-muted);">No recorded game history.</p>'}
                         </div>
-                        <div style="font-size: 0.9em;">
-                            <strong>${stats.wins}W - ${stats.losses}L - ${stats.ties}T</strong> 
-                            <span style="color: var(--accent-color); margin-left: 8px;">(+${stats.totalPoints} pts)</span>
-                            <span style="margin-left: 8px; color: var(--text-muted);">▼</span>
-                        </div>
-                    </div>
-                    <div id="game-details-${idx}" style="display: none; padding: 10px 14px; background: #1a1a1a; border-top: 1px solid var(--border-color);">
-                        ${matchesHtml}
                     </div>
                 </div>
             `;
-        }).join('');
 
-        const modalHtml = `
-            <div id="player-modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000;">
-                <div style="background: var(--card-bg); padding: 25px; border-radius: 8px; max-width: 580px; width: 90%; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative;">
-                    <button onclick="document.getElementById('player-modal-overlay').remove()" style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: white; font-size: 1.3em; cursor: pointer;">✖</button>
-                    
-                    <h2 style="color: var(--gold); margin-top: 0; margin-bottom: 5px;">👤 ${data.name}'s Profile</h2>
-                    <p style="margin-top: 0; color: var(--text-muted); font-size: 0.95em;">
-                        <strong>Lifetime Points:</strong> ${data.totalPoints || 0} &nbsp;|&nbsp; 
-                        <strong>Career Record:</strong> ${data.wins || 0}W - ${data.losses || 0}L - ${data.ties || 0}T
-                    </p>
+            const oldModal = document.getElementById('player-modal-overlay');
+            if (oldModal) oldModal.remove();
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-                    <!-- League Standings Section -->
-                    <h3 style="color: var(--accent-color); font-size: 1em; margin-top: 18px; margin-bottom: 8px;">🏆 League Standings</h3>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px;">
-                        ${leagueRanksHtml}
-                    </div>
-
-                    <hr style="border-color: var(--border-color); margin: 15px 0;">
-
-                    <!-- Per-Game History Breakdown -->
-                    <h3 style="color: var(--accent-color); font-size: 1em; margin-bottom: 10px;">📊 Game Breakdown & Match History</h3>
-                    <div>
-                        ${gameAccordionHtml || '<p style="color: var(--text-muted);">No recorded game history.</p>'}
-                    </div>
-                </div>
-            </div>
-        `;
-
-        const oldModal = document.getElementById('player-modal-overlay');
-        if (oldModal) oldModal.remove();
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-    } catch (err) {
-        console.error("Error fetching player profile:", err);
-        alert("Failed to load player profile.");
+        } catch (err) {
+            console.error("Error fetching player profile:", err);
+            alert("Failed to load player profile.");
+        }
     }
-}
+
     // Window exposures for inline button listeners
     window.addPlayer = addPlayer;
     window.removePlayer = removePlayer;
@@ -1181,6 +1105,5 @@ async function deleteCurrentLeague() {
         await loadSelectedLeague();
     });
 </script>
-
 </body>
 </html>
