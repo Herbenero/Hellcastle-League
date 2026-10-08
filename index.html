@@ -667,81 +667,97 @@ window.calcSnapTotal = function(player) {
 };
     // --- Score Submission Logic ---
     function submitEventScores() {
-      const eventName = document.getElementById('event-select').value;
-      const isHighWins = document.getElementById('score-type').value === 'high';
-      const rawDate = document.getElementById('event-date').value;
-      const scoreInputs = document.querySelectorAll('.player-score-field');
-      
-      const dateVal = rawDate ? new Date(rawDate).toISOString() : new Date().toISOString();
-      let eventScores = [];
+    const eventSelect = document.getElementById('event-select');
+    const scoreTypeSelect = document.getElementById('score-type');
+    const dateInput = document.getElementById('event-date');
 
-      scoreInputs.forEach(input => {
-        const value = parseFloat(input.value);
-        if (!isNaN(value)) {
-          eventScores.push({ name: input.dataset.player, score: value });
-        }
-      });
+    const eventName = eventSelect ? eventSelect.value : '';
+    const scoreType = scoreTypeSelect ? scoreTypeSelect.value : 'high';
+    const eventDate = dateInput && dateInput.value ? dateInput.value : new Date().toISOString();
 
-      if (eventScores.length === 0) {
-        alert('Please enter scores for at least one athlete.');
+    if (!eventName) {
+        alert("Please select an event.");
         return;
-      }
-
-      // Check if any score breaks the previous record for this event
-      let isNewRecord = false;
-      const previousEventsForGame = completedEvents.filter((evt, idx) => evt.eventName === eventName && idx !== editingIndex);
-
-      if (previousEventsForGame.length > 0) {
-        const previousScores = previousEventsForGame.flatMap(evt => evt.results.map(r => r.score));
-        if (previousScores.length > 0) {
-          if (isHighWins) {
-            const previousMax = Math.max(...previousScores);
-            isNewRecord = eventScores.some(s => s.score > previousMax);
-          } else {
-            const previousMin = Math.min(...previousScores);
-            isNewRecord = eventScores.some(s => s.score < previousMin);
-          }
-        }
-      }
-
-      eventScores.sort((a, b) => isHighWins ? b.score - a.score : a.score - b.score);
-      let currentRank = 1;
-
-      const processedResults = eventScores.map((entry, index, array) => {
-        if (index > 0 && entry.score !== array[index - 1].score) {
-          currentRank = index + 1;
-        }
-        const points = pointsMap[currentRank] !== undefined ? pointsMap[currentRank] : 1;
-        return { ...entry, rank: currentRank, points };
-      });
-
-      const eventPayload = {
-        eventName,
-        timestamp: dateVal,
-        results: processedResults
-      };
-
-      if (editingIndex !== null) {
-        completedEvents[editingIndex] = eventPayload;
-        editingIndex = null;
-      } else {
-        completedEvents.push(eventPayload);
-      }
-
-      if (isNewRecord) {
-        triggerRecordBanner();
-      }
-
-      updateLeaderboard();
-      renderCompletedEvents();
-
-      syncLeagueToFirebase();
-
-      document.getElementById('event-select').value = '';
-      setNowDate();
-      renderScoreInputs();
     }
 
+    const results = [];
+    let hasError = false;
+
+    players.forEach(p => {
+        const totalElem = document.querySelector(`.player-score-field[data-player="${p}"]`);
+        const scoreVal = totalElem ? parseFloat(totalElem.value) : NaN;
+
+        if (isNaN(scoreVal)) {
+            hasError = true;
+            return;
+        }
+
+        // Collect subscores based on event type
+        const subscores = {};
+        if (eventName === "JDC Jr") {
+            document.querySelectorAll(`.jdc-sub[data-player="${p}"]`).forEach(input => {
+                subscores[input.placeholder] = parseFloat(input.value) || 0;
+            });
+        } else if (eventName === "Snapshot") {
+            document.querySelectorAll(`.snap-sub[data-player="${p}"]`).forEach(input => {
+                subscores[input.placeholder] = parseFloat(input.value) || 0;
+            });
+        }
+
+        results.push({
+            name: p,
+            score: scoreVal,
+            subscores: subscores
+        });
+    });
+
+    if (hasError || results.length === 0) {
+        alert("Please enter valid numerical scores for all players.");
+        return;
+    }
+
+    // Rank players based on high/low metric
+    if (scoreType === 'low') {
+        results.sort((a, b) => a.score - b.score);
+    } else {
+        results.sort((a, b) => b.score - a.score);
+    }
+
+    // Assign rank and point values
+    let currentRank = 1;
+    results.forEach((res, idx) => {
+        if (idx > 0 && res.score === results[idx - 1].score) {
+            res.rank = results[idx - 1].rank;
+        } else {
+            res.rank = idx + 1;
+        }
+        res.points = pointsMap[res.rank] || 10;
+        res.medal = res.rank === 1 ? "🥇" : (res.rank === 2 ? "🥈" : (res.rank === 3 ? "🥉" : ""));
+    });
+
+    const eventRecord = {
+        eventName: eventName,
+        date: eventDate,
+        timestamp: new Date().toISOString(),
+        results: results
+    };
+
+    if (editingIndex !== null) {
+        completedEvents[editingIndex] = eventRecord;
+        editingIndex = null;
+    } else {
+        completedEvents.push(eventRecord);
+    }
+
+    // Persist and re-render UI
+    syncLeagueToFirebase();
+    updateLeaderboard();
+    renderCompletedEvents();
+
+    // Reset input fields
+    if (eventSelect) eventSelect.value = '';
+    renderScoreInputs();
+}
     function triggerRecordBanner() {
       const banner = document.getElementById('record-banner');
       if (banner) {
