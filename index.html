@@ -844,7 +844,7 @@ window.calcSnapTotal = function(player) {
         tbody.appendChild(tr);
     });
 }
-    function renderCompletedEvents() {
+   function renderCompletedEvents() {
     const container = document.getElementById('completed-events-log');
     if (!container) return;
 
@@ -858,8 +858,8 @@ window.calcSnapTotal = function(player) {
     // Display newest completed events first
     [...completedEvents].reverse().forEach((evt, revIdx) => {
         const actualIdx = completedEvents.length - 1 - revIdx;
-        
-        // Handle date fallback (evt.date or evt.timestamp)
+
+        // Date fallback handling
         const rawDate = evt.date || evt.timestamp;
         const formattedDate = rawDate ? new Date(rawDate).toLocaleString() : '';
         const dateDisplay = formattedDate ? ` <span style="font-weight: normal; color: var(--text-muted); font-size: 0.85em;">(${formattedDate})</span>` : '';
@@ -879,8 +879,8 @@ window.calcSnapTotal = function(player) {
         evt.results.forEach(res => {
             let subscoresText = '';
 
-            // Format subscores if present
-            if (res.subscores && Object.keys(res.subscores).length > 0) {
+            // Format and display subscores if present in result object
+            if (res.subscores && typeof res.subscores === 'object') {
                 const subDetails = Object.entries(res.subscores)
                     .filter(([_, val]) => val !== '' && val !== null && !isNaN(val))
                     .map(([key, val]) => `${key}: ${val}`)
