@@ -743,12 +743,12 @@
             totals[res.name].points += res.points || 0;
 
             const isTie = rankCounts[res.rank] > 1;
-            if (isTie) {
-                totals[res.name].ties++;
+            if (isTie && res.rank === 1) {
+                totals[res.name].ties++; // Tie for 1st place counts as a Tie
             } else if (res.rank === 1) {
-                totals[res.name].wins++;
+                totals[res.name].wins++; // Solo 1st place counts as a Win
             } else {
-                totals[res.name].losses++;
+                totals[res.name].losses++; // Any non-1st place finish (including ties for 2nd/3rd/etc.) counts as a Loss
             }
         });
     });
