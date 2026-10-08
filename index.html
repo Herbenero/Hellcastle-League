@@ -830,31 +830,22 @@
         renderCompletedEvents();
     }
 
-    function updateLeaderboard() {
-        const totals = {};
-
-        completedEvents.forEach(evt => {
-            const rankCounts = {};
-            evt.results.forEach(res => {
-                rankCounts[res.rank] = (rankCounts[res.rank] || 0) + 1;
-            });
-
-            evt.results.forEach(res => {
-                if (!totals[res.name]) {
-                    totals[res.name] = { points: 0, wins: 0, losses: 0, ties: 0 };
-                }
-                totals[res.name].points += res.points || 0;
-
-                const isTie = rankCounts[res.rank] > 1;
-                if (isTie && res.rank === 1) {
-                    totals[res.name].ties++;
-                } else if (res.rank === 1) {
-                    totals[res.name].wins++;
-                } else {
-                    totals[res.name].losses++;
-                }
-            });
-        });
+   leaderboardData.forEach((player, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td>
+                <a href="#" onclick="showPlayerProfile('${player.name}'); return false;" style="color: var(--gold); font-weight: bold; text-decoration: underline; cursor: pointer;">
+                    ${player.name}
+                </a>
+            </td>
+            <td><strong>${player.points}</strong></td>
+            <td>${player.wins}</td>
+            <td>${player.losses}</td>
+            <td>${player.ties}</td>
+        `;
+        tbody.appendChild(tr);
+    });
 
         const leaderboardData = Object.keys(totals).map(name => ({
             name: name,
@@ -944,6 +935,59 @@
 
         container.innerHTML = html;
     }
+    // Function to fetch and display player lifetime profiles
+async function showPlayerProfile(playerName) {
+    const playerRef = doc(db, "players", playerName.trim());
+    
+    try {
+        const docSnap = await getDoc(playerRef);
+        if (!docSnap.exists()) {
+            alert(`No lifetime profile data found for ${playerName}.`);
+            return;
+        }
+
+        const data = docSnap.data();
+        const history = data.gameHistory || [];
+
+        let historyHtml = history.map(g => {
+            const subDetails = g.subscores && Object.keys(g.subscores).length > 0
+                ? ` (${Object.entries(g.subscores).map(([k, v]) => `${k}:${v}`).join(', ')})`
+                : '';
+            const dateStr = g.date ? new Date(g.date).toLocaleDateString() : '';
+            return `<li style="margin-bottom: 6px;">
+                <strong>${g.event}</strong> [${g.league}] - Score: ${g.score}${subDetails} | Rank #${g.rank} (+${g.points} pts) <span style="color: var(--text-muted); font-size: 0.85em;">${dateStr}</span>
+            </li>`;
+        }).reverse().join('');
+
+        const modalHtml = `
+            <div id="player-modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 1000;">
+                <div style="background: var(--card-bg); padding: 25px; border-radius: 8px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative;">
+                    <button onclick="document.getElementById('player-modal-overlay').remove()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; color: white; font-size: 1.2em; cursor: pointer;">✖</button>
+                    <h2 style="color: var(--gold); margin-top: 0;">👤 ${data.name}'s Profile</h2>
+                    <p><strong>Total Lifetime Points:</strong> ${data.totalPoints || 0}</p>
+                    <p><strong>Career Record:</strong> ${data.wins || 0}W - ${data.losses || 0}L - ${data.ties || 0}T (${data.gamesPlayed || 0} Games)</p>
+                    <hr style="border-color: var(--border-color); margin: 15px 0;">
+                    <h3 style="color: var(--accent-color);">📜 Match History</h3>
+                    <ul style="padding-left: 20px;">
+                        ${historyHtml || '<li>No games recorded yet.</li>'}
+                    </ul>
+                </div>
+            </div>
+        `;
+
+        // Remove old modal if open, then append new one
+        const oldModal = document.getElementById('player-modal-overlay');
+        if (oldModal) oldModal.remove();
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    } catch (err) {
+        console.error("Error fetching player profile:", err);
+        alert("Failed to load player profile.");
+    }
+}
+
+// Expose to window for inline onclick attributes
+window.showPlayerProfile = showPlayerProfile;
 
     // Window exposures for inline button listeners
     window.addPlayer = addPlayer;
