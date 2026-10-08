@@ -1,326 +1,336 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏆 Hellcastle Archery Arena League</title>
-    <style>
-        :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --accent-color: #4CAF50;
-            --accent-hover: #45a049;
-            --danger-color: #e53935;
-            --danger-hover: #c62828;
-            --text-color: #ffffff;
-            --text-muted: #b0b0b0;
-            --border-color: #333333;
-            --input-bg: #2a2a2a;
-            --gold: #ffd700;
-            --silver: #c0c0c0;
-            --bronze: #cd7f32;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏆 Hellcastle Archery Arena League</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --accent-color: #4CAF50;
+      --accent-hover: #45a049;
+      --danger-color: #e53935;
+      --danger-hover: #c62828;
+      --text-color: #ffffff;
+      --text-muted: #b0b0b0;
+      --border-color: #333333;
+      --input-bg: #2a2a2a;
+      --gold: #ffd700;
+      --silver: #c0c0c0;
+      --bronze: #cd7f32;
+    }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-        .container {
-            max-width: 900px;
-            width: 100%;
-        }
+    .container {
+      max-width: 900px;
+      width: 100%;
+    }
 
-        h1, h2, h3 {
-            text-align: center;
-            color: var(--gold);
-        }
+    h1, h2, h3 {
+      text-align: center;
+      color: var(--gold);
+    }
 
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            border: 1px solid var(--border-color);
-            position: relative;
-        }
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      border: 1px solid var(--border-color);
+      position: relative;
+    }
 
-        .form-row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
+    .form-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
 
-        .form-group {
-            flex: 1;
-            min-width: 200px;
-            display: flex;
-            flex-direction: column;
-        }
+    .form-group {
+      flex: 1;
+      min-width: 200px;
+      display: flex;
+      flex-direction: column;
+    }
 
-        label {
-            font-size: 0.9em;
-            margin-bottom: 5px;
-            color: var(--text-muted);
-        }
+    label {
+      font-size: 0.9em;
+      margin-bottom: 5px;
+      color: var(--text-muted);
+    }
 
-        input, select, button {
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            font-size: 1em;
-        }
+    input, select, button {
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      font-size: 1em;
+    }
 
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--accent-color);
-        }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
 
-        button {
-            background-color: var(--accent-color);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            transition: background 0.2s;
-        }
+    button {
+      background-color: var(--accent-color);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
+    }
 
-        button:hover {
-            background-color: var(--accent-hover);
-        }
+    button:hover {
+      background-color: var(--accent-hover);
+    }
 
-        .btn-danger {
-            background-color: var(--danger-color);
-        }
+    .btn-danger {
+      background-color: var(--danger-color);
+    }
 
-        .btn-danger:hover {
-            background-color: var(--danger-hover);
-        }
+    .btn-danger:hover {
+      background-color: var(--danger-hover);
+    }
 
-        .tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 10px;
-        }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
 
-        .tag {
-            background-color: var(--input-bg);
-            border: 1px solid var(--border-color);
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.85em;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+    .tag {
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 0.85em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
 
-        .tag button {
-            background: none;
-            border: none;
-            color: #ff5555;
-            padding: 0;
-            font-size: 1.1em;
-            cursor: pointer;
-        }
+    .tag button {
+      background: none;
+      border: none;
+      color: #ff5555;
+      padding: 0;
+      font-size: 1.1em;
+      cursor: pointer;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
 
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
 
-        th {
-            background-color: var(--input-bg);
-            color: var(--gold);
-        }
+    th {
+      background-color: var(--input-bg);
+      color: var(--gold);
+    }
 
-        tr:nth-child(1) td:first-child { color: var(--gold); font-weight: bold; }
-        tr:nth-child(2) td:first-child { color: var(--silver); font-weight: bold; }
-        tr:nth-child(3) td:first-child { color: var(--bronze); font-weight: bold; }
+    tr:nth-child(1) td:first-child {
+      color: var(--gold);
+      font-weight: bold;
+    }
+    tr:nth-child(2) td:first-child {
+      color: var(--silver);
+      font-weight: bold;
+    }
+    tr:nth-child(3) td:first-child {
+      color: var(--bronze);
+      font-weight: bold;
+    }
 
-        #current-league-header {
-            text-align: center;
-            font-size: 1.1em;
-            color: var(--accent-color);
-            margin-top: -10px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-        }
+    #current-league-header {
+      text-align: center;
+      font-size: 1.1em;
+      color: var(--accent-color);
+      margin-top: -10px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+    }
 
-        .event-card {
-            background: #2a2a2a;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-        }
+    .event-card {
+      background: #2a2a2a;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
 
-        .event-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
+    .event-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
 
-        .event-actions {
-            display: flex;
-            gap: 8px;
-        }
+    .event-actions {
+      display: flex;
+      gap: 8px;
+    }
 
-        .event-actions button {
-            padding: 5px 10px;
-            font-size: 0.85em;
-        }
-    </style>
+    .event-actions button {
+      padding: 5px 10px;
+      font-size: 0.85em;
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
+  <div class="container">
     <h1>🏆 Hellcastle Archery Arena League</h1>
 
     <!-- 1. League & Setup Management -->
     <div class="card">
-        <h2>1. Active League Setup</h2>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="league-select">Continue Saved League</label>
-                <select id="league-select" onchange="loadSelectedLeague()">
-                    <option value="">-- Select Existing League --</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="league-name-input">Create New League Name</label>
-                <div style="display: flex; gap: 8px;">
-                    <input type="text" id="league-name-input" placeholder="e.g. HAAL #1" style="flex: 1;">
-                    <button id="set-league-btn" onclick="setActiveLeague()">Set League</button>
-                </div>
-            </div>
+      <h2>1. Active League Setup</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="league-select">Continue Saved League</label>
+          <select id="league-select" onchange="loadSelectedLeague()">
+            <option value="">-- Select Existing League --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="league-name-input">Create New League Name</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="league-name-input" placeholder="e.g. HAAL #1" style="flex: 1;">
+            <button id="set-league-btn" onclick="setActiveLeague()">Set League</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="current-league-header">
+        <span>Current Active League: <strong id="current-league-text">Hellcastle Archery League</strong></span>
+        <button class="btn-danger" style="padding: 4px 10px; font-size: 0.85em;" onclick="deleteCurrentLeague()">🗑️ Delete League</button>
+      </div>
+
+      <hr style="border-color: var(--border-color); margin: 20px 0;">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Add Combatant / Player Name</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="player-input" placeholder="Enter player name" style="flex: 1;">
+            <button onclick="addPlayer()">Add</button>
+          </div>
+          <div id="player-tags" class="tags"></div>
         </div>
 
-        <div id="current-league-header">
-            <span>Current Active League: <strong id="current-league-text">Hellcastle Archery League</strong></span>
-            <button class="btn-danger" style="padding: 4px 10px; font-size: 0.85em;" onclick="deleteCurrentLeague()">🗑️ Delete League</button>
+        <div class="form-group">
+          <label>Add Event Name</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="event-input" placeholder="Enter event name" style="flex: 1;">
+            <button onclick="addEvent()">Add</button>
+          </div>
+          <div id="event-tags" class="tags"></div>
         </div>
-
-        <hr style="border-color: var(--border-color); margin: 20px 0;">
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Add Combatant / Player Name</label>
-                <div style="display: flex; gap: 8px;">
-                    <input type="text" id="player-input" placeholder="Enter player name" style="flex: 1;">
-                    <button onclick="addPlayer()">Add</button>
-                </div>
-                <div id="player-tags" class="tags"></div>
-            </div>
-            <div class="form-group">
-                <label>Add Event Name</label>
-                <div style="display: flex; gap: 8px;">
-                    <input type="text" id="event-input" placeholder="Enter event name" style="flex: 1;">
-                    <button onclick="addEvent()">Add</button>
-                </div>
-                <div id="event-tags" class="tags"></div>
-            </div>
-        </div>
+      </div>
     </div>
 
     <!-- 2. Event Scoring -->
     <div class="card">
-        <h2>2. Enter Event Results</h2>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="event-select">Select Event</label>
-                <select id="event-select" onchange="renderScoreInputs()">
-                    <option value="">-- Choose Event --</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="score-type">Scoring Metric</label>
-                <select id="score-type">
-                    <option value="high">High Score Wins</option>
-                    <option value="low">Low Score Wins (Time/Penalty)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="event-date">Event Date & Time</label>
-                <input type="datetime-local" id="event-date">
-            </div>
+      <h2>2. Enter Event Results</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="event-select">Select Event</label>
+          <select id="event-select" onchange="renderScoreInputs()">
+            <option value="">-- Choose Event --</option>
+          </select>
         </div>
+        <div class="form-group">
+          <label for="score-type">Scoring Metric</label>
+          <select id="score-type">
+            <option value="high">High Score Wins</option>
+            <option value="low">Low Score Wins (Time/Penalty)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="event-date">Event Date & Time</label>
+          <input type="datetime-local" id="event-date">
+        </div>
+      </div>
 
-        <div id="score-inputs-container"></div>
+      <div id="score-inputs-container"></div>
     </div>
 
     <!-- 3. Leaderboard -->
     <div class="card">
-        <h2>🏆 Standings Leaderboard</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Rank</th>
-                    <th>Athlete</th>
-                    <th>Total Points</th>
-                    <th>Wins (W)</th>
-                    <th>Losses (L)</th>
-                    <th>Ties (T)</th>
-                </tr>
-            </thead>
-            <tbody id="leaderboard-body">
-                <!-- Standings populated dynamically -->
-            </tbody>
-        </table>
+      <h2>🏆 Standings Leaderboard</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Athlete</th>
+            <th>Total Points</th>
+            <th>Wins (W)</th>
+            <th>Losses (L)</th>
+            <th>Ties (T)</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <!-- Standings populated dynamically -->
+        </tbody>
+      </table>
     </div>
 
     <!-- 4. Completed Event Log -->
     <div class="card">
-        <h2>📜 Event Log</h2>
-        <div id="completed-events-log"></div>
+      <h2>📜 Event Log</h2>
+      <div id="completed-events-log"></div>
     </div>
-</div>
+  </div>
 
-<!-- Main Application Script -->
-<script type="module">
+  <!-- Main Application Script -->
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { 
-        getFirestore, 
-        doc, 
-        setDoc, 
-        getDoc, 
-        updateDoc, 
-        deleteDoc, 
-        collection, 
-        getDocs, 
-        arrayUnion, 
-        serverTimestamp 
+      getFirestore, 
+      doc, 
+      setDoc, 
+      getDoc, 
+      updateDoc, 
+      deleteDoc, 
+      collection, 
+      getDocs, 
+      arrayUnion, 
+      serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
-        apiKey: "AIzaSyBvL2K8R82qk3fG4EEKZ6sOIiieLcCKckA",
-        authDomain: "haal-fc862.firebaseapp.com",
-        projectId: "haal-fc862",
-        storageBucket: "haal-fc862.firebasestorage.app",
-        messagingSenderId: "1077392905739",
-        appId: "1:1077392905739:web:cc047fae886356663fd90e",
-        measurementId: "G-P99RVN1XBF"
+      apiKey: "AIzaSyBvL2K8R82qk3fG4EEKZ6sOIiieLcCKckA",
+      authDomain: "haal-fc862.firebaseapp.com",
+      projectId: "haal-fc862",
+      storageBucket: "haal-fc862.firebasestorage.app",
+      messagingSenderId: "1077392905739",
+      appId: "1:1077392905739:web:cc047fae886356663fd90e",
+      measurementId: "G-P99RVN1XBF"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -332,138 +342,222 @@
     const players = [];
     const events = [];
     const completedEvents = [];
-
     const pointsMap = { 1: 25, 2: 20, 3: 15 };
 
     function setNowDate() {
-        const dateInput = document.getElementById('event-date');
-        if (dateInput) {
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            dateInput.value = now.toISOString().slice(0, 16);
-        }
+      const dateInput = document.getElementById('event-date');
+      if (dateInput) {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        dateInput.value = now.toISOString().slice(0, 16);
+      }
     }
 
-    // Helper to generate consistent, sanitized Firestore document IDs
+    // Helper to generate consistent, deterministic document IDs
     function getSanitizedDocId(name) {
-        return name ? name.trim().replace(/[^a-zA-Z0-9_-]/g, '_') : '';
+      return name ? name.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_') : '';
     }
 
     async function syncLeagueToFirebase() {
-        const sanitizedDocId = getSanitizedDocId(currentLeagueName);
-        if (!sanitizedDocId) return;
+      const sanitizedDocId = getSanitizedDocId(currentLeagueName);
+      if (!sanitizedDocId) return;
 
-        const leagueRef = doc(db, "leagues", sanitizedDocId);
-        try {
-            await setDoc(leagueRef, {
-                leagueName: currentLeagueName,
-                lastUpdated: serverTimestamp(),
-                completedEvents: completedEvents
-            }, { merge: true });
-            await fetchSavedLeagues();
-        } catch (error) {
-            console.error("Error saving league to Firebase: ", error);
-        }
+      const leagueRef = doc(db, "leagues", sanitizedDocId);
+      try {
+        await setDoc(leagueRef, {
+          leagueName: currentLeagueName,
+          lastUpdated: serverTimestamp(),
+          completedEvents: completedEvents
+        }, { merge: true });
+        await fetchSavedLeagues();
+      } catch (error) {
+        console.error("Error saving league to Firebase: ", error);
+      }
     }
 
     async function updatePlayerProfiles(eventRecord) {
-        const rankCounts = {};
-        eventRecord.results.forEach(res => {
-            rankCounts[res.rank] = (rankCounts[res.rank] || 0) + 1;
-        });
+      const rankCounts = {};
+      eventRecord.results.forEach(res => {
+        rankCounts[res.rank] = (rankCounts[res.rank] || 0) + 1;
+      });
 
-        for (const res of eventRecord.results) {
-            const playerRef = doc(db, "players", res.name.trim());
-            const isTie = rankCounts[res.rank] > 1;
+      for (const res of eventRecord.results) {
+        const playerRef = doc(db, "players", res.name.trim());
+        const isTie = rankCounts[res.rank] > 1;
+        const isWin = !isTie && res.rank === 1;
+        const isLoss = res.rank > 1;
+        const isTieStat = isTie && res.rank === 1;
 
-            const isWin = !isTie && res.rank === 1;
-            const isLoss = res.rank > 1;
-            const isTieStat = isTie && res.rank === 1;
-
-            try {
-                const docSnap = await getDoc(playerRef);
-
-                if (!docSnap.exists()) {
-                    await setDoc(playerRef, {
-                        name: res.name,
-                        totalPoints: res.points || 0,
-                        wins: isWin ? 1 : 0,
-                        losses: isLoss ? 1 : 0,
-                        ties: isTieStat ? 1 : 0,
-                        gamesPlayed: 1,
-                        gameHistory: [{
-                            event: eventRecord.eventName,
-                            league: currentLeagueName,
-                            score: res.score,
-                            rank: res.rank,
-                            points: res.points,
-                            subscores: res.subscores || {},
-                            date: eventRecord.date || eventRecord.timestamp
-                        }]
-                    });
-                } else {
-                    const current = docSnap.data();
-                    await updateDoc(playerRef, {
-                        totalPoints: (current.totalPoints || 0) + (res.points || 0),
-                        wins: (current.wins || 0) + (isWin ? 1 : 0),
-                        losses: (current.losses || 0) + (isLoss ? 1 : 0),
-                        ties: (current.ties || 0) + (isTieStat ? 1 : 0),
-                        gamesPlayed: (current.gamesPlayed || 0) + 1,
-                        gameHistory: arrayUnion({
-                            event: eventRecord.eventName,
-                            league: currentLeagueName,
-                            score: res.score,
-                            rank: res.rank,
-                            points: res.points,
-                            subscores: res.subscores || {},
-                            date: eventRecord.date || eventRecord.timestamp
-                        })
-                    });
-                }
-            } catch (err) {
-                console.error(`Error updating player profile for ${res.name}:`, err);
-            }
+        try {
+          const docSnap = await getDoc(playerRef);
+          if (!docSnap.exists()) {
+            await setDoc(playerRef, {
+              name: res.name,
+              totalPoints: res.points || 0,
+              wins: isWin ? 1 : 0,
+              losses: isLoss ? 1 : 0,
+              ties: isTieStat ? 1 : 0,
+              gamesPlayed: 1,
+              gameHistory: [{
+                event: eventRecord.eventName,
+                league: currentLeagueName,
+                score: res.score,
+                rank: res.rank,
+                points: res.points,
+                subscores: res.subscores || {},
+                date: eventRecord.date || eventRecord.timestamp
+              }]
+            });
+          } else {
+            const current = docSnap.data();
+            await updateDoc(playerRef, {
+              totalPoints: (current.totalPoints || 0) + (res.points || 0),
+              wins: (current.wins || 0) + (isWin ? 1 : 0),
+              losses: (current.losses || 0) + (isLoss ? 1 : 0),
+              ties: (current.ties || 0) + (isTieStat ? 1 : 0),
+              gamesPlayed: (current.gamesPlayed || 0) + 1,
+              gameHistory: arrayUnion({
+                event: eventRecord.eventName,
+                league: currentLeagueName,
+                score: res.score,
+                rank: res.rank,
+                points: res.points,
+                subscores: res.subscores || {},
+                date: eventRecord.date || eventRecord.timestamp
+              })
+            });
+          }
+        } catch (err) {
+          console.error(`Error updating player profile for ${res.name}:`, err);
         }
+      }
     }
 
     async function fetchSavedLeagues() {
-        const select = document.getElementById('league-select');
-        if (!select) return;
+      const select = document.getElementById('league-select');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- Select Existing League --</option>';
+      const seenLeagues = new Set();
 
-        select.innerHTML = '<option value="">-- Select Existing League --</option>';
-        const seenLeagues = new Set();
-
-        try {
-            const querySnapshot = await getDocs(collection(db, "leagues"));
-            querySnapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                const name = data.leagueName || docSnap.id;
-
-                if (name && !seenLeagues.has(name)) {
-                    seenLeagues.add(name);
-                    const opt = document.createElement('option');
-                    opt.value = name;
-                    opt.textContent = name;
-                    if (name === currentLeagueName) {
-                        opt.selected = true;
-                    }
-                    select.appendChild(opt);
-                }
-            });
-        } catch (err) {
-            console.error("Error fetching leagues:", err);
-        }
+      try {
+        const querySnapshot = await getDocs(collection(db, "leagues"));
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const name = data.leagueName || docSnap.id;
+          const normalized = name.trim().toLowerCase();
+          if (name && !seenLeagues.has(normalized)) {
+            seenLeagues.add(normalized);
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            if (name.toLowerCase() === currentLeagueName.toLowerCase()) {
+              opt.selected = true;
+            }
+            select.appendChild(opt);
+          }
+        });
+      } catch (err) {
+        console.error("Error fetching leagues:", err);
+      }
     }
 
     async function setActiveLeague() {
-        const input = document.getElementById('league-name-input');
-        const name = input ? input.value.trim() : '';
-        if (!name) {
-            alert("Please enter a valid league name.");
-            return;
+      const input = document.getElementById('league-name-input');
+      const name = input ? input.value.trim() : '';
+      if (!name) {
+        alert("Please enter a valid league name.");
+        return;
+      }
+      currentLeagueName = name;
+      document.getElementById('current-league-text').textContent = currentLeagueName;
+
+      players.length = 0;
+      events.length = 0;
+      completedEvents.length = 0;
+      editingIndex = null;
+
+      renderSetupUI();
+      updateLeaderboard();
+      renderCompletedEvents();
+      await syncLeagueToFirebase();
+      if (input) input.value = '';
+    }
+
+    async function loadSelectedLeague() {
+      const select = document.getElementById('league-select');
+      const leagueName = select.value;
+      if (!leagueName) return;
+
+      currentLeagueName = leagueName;
+      document.getElementById('current-league-text').textContent = currentLeagueName;
+
+      const sanitizedDocId = getSanitizedDocId(leagueName);
+      const leagueRef = doc(db, "leagues", sanitizedDocId);
+
+      try {
+        let docSnap = await getDoc(leagueRef);
+        // Fallback check if older documents used different capitalization in doc IDs
+        if (!docSnap.exists()) {
+          const allLeaguesSnap = await getDocs(collection(db, "leagues"));
+          for (const lDoc of allLeaguesSnap.docs) {
+            const data = lDoc.data();
+            if ((data.leagueName && data.leagueName.trim().toLowerCase() === leagueName.toLowerCase()) || 
+                lDoc.id.toLowerCase() === leagueName.toLowerCase()) {
+              docSnap = lDoc;
+              break;
+            }
+          }
         }
 
-        currentLeagueName = name;
+        if (docSnap && docSnap.exists()) {
+          const data = docSnap.data();
+          completedEvents.length = 0;
+          players.length = 0;
+          events.length = 0;
+          editingIndex = null;
+
+          if (data.completedEvents) {
+            completedEvents.push(...data.completedEvents);
+            data.completedEvents.forEach(evt => {
+              if (evt.eventName && !events.includes(evt.eventName)) {
+                events.push(evt.eventName);
+              }
+              evt.results.forEach(res => {
+                if (res.name && !players.includes(res.name)) {
+                  players.push(res.name);
+                }
+              });
+            });
+          }
+
+          renderSetupUI();
+          updateLeaderboard();
+          renderCompletedEvents();
+        }
+      } catch (err) {
+        console.error("Error loading league data:", err);
+      }
+    }
+
+    async function deleteCurrentLeague() {
+      if (!confirm(`Are you sure you want to permanently delete the active league "${currentLeagueName}"?`)) {
+        return;
+      }
+
+      const sanitizedDocId = getSanitizedDocId(currentLeagueName);
+      const leagueRef = doc(db, "leagues", sanitizedDocId);
+
+      try {
+        await deleteDoc(leagueRef);
+
+        // Also clean up any legacy document IDs with raw name casing
+        const legacyRef = doc(db, "leagues", currentLeagueName.trim().replace(/[^a-zA-Z0-9_-]/g, '_'));
+        if (legacyRef.id !== sanitizedDocId) {
+          try { await deleteDoc(legacyRef); } catch(_) {}
+        }
+
+        alert(`League "${currentLeagueName}" deleted successfully.`);
+        currentLeagueName = "Hellcastle Archery League";
         document.getElementById('current-league-text').textContent = currentLeagueName;
 
         players.length = 0;
@@ -474,614 +568,554 @@
         renderSetupUI();
         updateLeaderboard();
         renderCompletedEvents();
-        await syncLeagueToFirebase();
-
-        if (input) input.value = '';
-    }
-
-    async function loadSelectedLeague() {
-        const select = document.getElementById('league-select');
-        const leagueName = select.value;
-        if (!leagueName) return;
-
-        currentLeagueName = leagueName;
-        document.getElementById('current-league-text').textContent = currentLeagueName;
-
-        const sanitizedDocId = getSanitizedDocId(leagueName);
-        const leagueRef = doc(db, "leagues", sanitizedDocId);
-
-        try {
-            const docSnap = await getDoc(leagueRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-
-                completedEvents.length = 0;
-                players.length = 0;
-                events.length = 0;
-                editingIndex = null;
-
-                if (data.completedEvents) {
-                    completedEvents.push(...data.completedEvents);
-
-                    data.completedEvents.forEach(evt => {
-                        if (evt.eventName && !events.includes(evt.eventName)) {
-                            events.push(evt.eventName);
-                        }
-                        evt.results.forEach(res => {
-                            if (res.name && !players.includes(res.name)) {
-                                players.push(res.name);
-                            }
-                        });
-                    });
-                }
-
-                renderSetupUI();
-                updateLeaderboard();
-                renderCompletedEvents();
-            }
-        } catch (err) {
-            console.error("Error loading league data:", err);
-        }
-    }
-
-    async function deleteCurrentLeague() {
-        if (!confirm(`Are you sure you want to permanently delete the active league "${currentLeagueName}"?`)) {
-            return;
-        }
-
-        const sanitizedDocId = getSanitizedDocId(currentLeagueName);
-        const leagueRef = doc(db, "leagues", sanitizedDocId);
-
-        try {
-            await deleteDoc(leagueRef);
-            alert(`League "${currentLeagueName}" deleted successfully.`);
-
-            currentLeagueName = "Hellcastle Archery League";
-            document.getElementById('current-league-text').textContent = currentLeagueName;
-
-            players.length = 0;
-            events.length = 0;
-            completedEvents.length = 0;
-            editingIndex = null;
-
-            renderSetupUI();
-            updateLeaderboard();
-            renderCompletedEvents();
-            await fetchSavedLeagues();
-        } catch (err) {
-            console.error("Error deleting league:", err);
-            alert("Failed to delete league from database.");
-        }
+        await fetchSavedLeagues();
+      } catch (err) {
+        console.error("Error deleting league:", err);
+        alert("Failed to delete league from database.");
+      }
     }
 
     function addPlayer() {
-        const input = document.getElementById('player-input');
-        const name = input.value.trim();
-        if (name && !players.includes(name)) {
-            players.push(name);
-            input.value = '';
-            renderSetupUI();
-        }
+      const input = document.getElementById('player-input');
+      const name = input.value.trim();
+      if (name && !players.includes(name)) {
+        players.push(name);
+        input.value = '';
+        renderSetupUI();
+      }
     }
 
     function removePlayer(name) {
-        const idx = players.indexOf(name);
-        if (idx > -1) {
-            players.splice(idx, 1);
-            renderSetupUI();
-        }
+      const idx = players.indexOf(name);
+      if (idx > -1) {
+        players.splice(idx, 1);
+        renderSetupUI();
+      }
     }
 
     function addEvent() {
-        const input = document.getElementById('event-input');
-        const name = input.value.trim();
-        if (name && !events.includes(name)) {
-            events.push(name);
-            input.value = '';
-            renderSetupUI();
-        }
+      const input = document.getElementById('event-input');
+      const name = input.value.trim();
+      if (name && !events.includes(name)) {
+        events.push(name);
+        input.value = '';
+        renderSetupUI();
+      }
     }
 
     function removeEvent(name) {
-        const idx = events.indexOf(name);
-        if (idx > -1) {
-            events.splice(idx, 1);
-            renderSetupUI();
-        }
+      const idx = events.indexOf(name);
+      if (idx > -1) {
+        events.splice(idx, 1);
+        renderSetupUI();
+      }
     }
 
     function renderSetupUI() {
-        const playerTags = document.getElementById('player-tags');
-        if (playerTags) {
-            playerTags.innerHTML = players.map(p => `
-                <span class="tag">${p} <button onclick="removePlayer('${p}')">&times;</button></span>
-            `).join('');
-        }
+      const playerTags = document.getElementById('player-tags');
+      if (playerTags) {
+        playerTags.innerHTML = players.map(p => `
+          <span class="tag">${p} <button onclick="removePlayer('${p}')">&times;</button></span>
+        `).join('');
+      }
 
-        const eventTags = document.getElementById('event-tags');
-        if (eventTags) {
-            eventTags.innerHTML = events.map(e => `
-                <span class="tag">${e} <button onclick="removeEvent('${e}')">&times;</button></span>
-            `).join('');
-        }
+      const eventTags = document.getElementById('event-tags');
+      if (eventTags) {
+        eventTags.innerHTML = events.map(e => `
+          <span class="tag">${e} <button onclick="removeEvent('${e}')">&times;</button></span>
+        `).join('');
+      }
 
-        const select = document.getElementById('event-select');
-        if (select) {
-            select.innerHTML = '<option value="">-- Choose Event --</option>' + 
-                events.map(e => `<option value="${e}">${e}</option>`).join('');
-        }
+      const select = document.getElementById('event-select');
+      if (select) {
+        select.innerHTML = '<option value="">-- Choose Event --</option>' + 
+          events.map(e => `<option value="${e}">${e}</option>`).join('');
+      }
     }
 
     function renderScoreInputs(prefillData = null) {
-        const container = document.getElementById('score-inputs-container');
-        const eventSelect = document.getElementById('event-select');
-        if (!eventSelect || !container) return;
+      const container = document.getElementById('score-inputs-container');
+      const eventSelect = document.getElementById('event-select');
+      if (!eventSelect || !container) return;
 
-        const eventName = eventSelect.value;
-        if (!eventName || players.length === 0) {
-            container.innerHTML = '';
-            return;
+      const eventName = eventSelect.value;
+      if (!eventName || players.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      const isJdcJr = eventName === "JDC Jr";
+      const isSnapshot = eventName === "Snapshot";
+      let html = '<div style="margin-top: 15px;">';
+
+      players.forEach(p => {
+        let existingScore = '';
+        let existingSubs = {};
+
+        if (prefillData && prefillData.results) {
+          const match = prefillData.results.find(r => r.name === p);
+          if (match) {
+            existingScore = match.score !== undefined ? match.score : '';
+            existingSubs = match.subscores || {};
+          }
         }
 
-        const isJdcJr = eventName === "JDC Jr";
-        const isSnapshot = eventName === "Snapshot";
+        if (isJdcJr) {
+          const cb = existingSubs["Coloring Book"] !== undefined ? existingSubs["Coloring Book"] : '';
+          const bb = existingSubs["Bit of Bully"] !== undefined ? existingSubs["Bit of Bully"] : '';
+          const r180 = existingSubs["Race to 180"] !== undefined ? existingSubs["Race to 180"] : '';
 
-        let html = '<div style="margin-top: 15px;">';
+          html += `
+            <div class="card" style="margin-bottom: 10px; padding: 12px; background: #222;">
+              <strong>${p}</strong>
+              <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                <input type="number" class="jdc-sub" data-player="${p}" value="${cb}" placeholder="Coloring Book" style="flex: 1; min-width: 100px;" oninput="calcJdcTotal('${p}')">
+                <input type="number" class="jdc-sub" data-player="${p}" value="${bb}" placeholder="Bit of Bully" style="flex: 1; min-width: 100px;" oninput="calcJdcTotal('${p}')">
+                <input type="number" class="jdc-sub" data-player="${p}" value="${r180}" placeholder="Race to 180" style="flex: 1; min-width: 100px;" oninput="calcJdcTotal('${p}')">
+                <input type="number" class="player-score-field" id="total-${p}" data-player="${p}" value="${existingScore}" placeholder="Total" style="flex: 1; min-width: 100px; font-weight: bold; border-color: var(--gold);" readonly>
+              </div>
+            </div>
+          `;
+        } else if (isSnapshot) {
+          const fp = existingSubs["Flash Point"] !== undefined ? existingSubs["Flash Point"] : '';
+          const ndc = existingSubs["9 Dart Century"] !== undefined ? existingSubs["9 Dart Century"] : '';
+          const qd = existingSubs["Quick Draw"] !== undefined ? existingSubs["Quick Draw"] : '';
 
-        players.forEach(p => {
-            let existingScore = '';
-            let existingSubs = {};
+          html += `
+            <div class="card" style="margin-bottom: 10px; padding: 12px; background: #222;">
+              <strong>${p}</strong>
+              <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                <input type="number" class="snap-sub" data-player="${p}" value="${fp}" placeholder="Flash Point" style="flex: 1; min-width: 100px;" oninput="calcSnapTotal('${p}')">
+                <input type="number" class="snap-sub" data-player="${p}" value="${ndc}" placeholder="9 Dart Century" style="flex: 1; min-width: 100px;" oninput="calcSnapTotal('${p}')">
+                <input type="number" class="snap-sub" data-player="${p}" value="${qd}" placeholder="Quick Draw" style="flex: 1; min-width: 100px;" oninput="calcSnapTotal('${p}')">
+                <input type="number" class="player-score-field" id="total-${p}" data-player="${p}" value="${existingScore}" placeholder="Total" style="flex: 1; min-width: 100px; font-weight: bold; border-color: var(--gold);" readonly>
+              </div>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="form-group" style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+              <label style="width: 150px; margin: 0;">${p}</label>
+              <input type="number" class="player-score-field" data-player="${p}" value="${existingScore}" placeholder="Enter score">
+            </div>
+          `;
+        }
+      });
 
-            if (prefillData && prefillData.results) {
-                const match = prefillData.results.find(r => r.name === p);
-                if (match) {
-                    existingScore = match.score !== undefined ? match.score : '';
-                    existingSubs = match.subscores || {};
-                }
-            }
-
-            if (isJdcJr) {
-                const cb = existingSubs["Coloring Book"] !== undefined ? existingSubs["Coloring Book"] : '';
-                const bb = existingSubs["Bit of Bully"] !== undefined ? existingSubs["Bit of Bully"] : '';
-                const r180 = existingSubs["Race to 180"] !== undefined ? existingSubs["Race to 180"] : '';
-
-                html += `
-                    <div class="card" style="margin-bottom: 10px; padding: 12px; background: #222;">
-                        <strong>${p}</strong>
-                        <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-                            <input type="number" class="jdc-sub" data-player="${p}" value="${cb}" placeholder="Coloring Book" style="flex: 1; min-width: 100px;" oninput="calcJdcTotal('${p}')">
-                            <input type="number" class="jdc-sub" data-player="${p}" value="${bb}" placeholder="Bit of Bully" style="flex: 1; min-width: 100px;" oninput="calcJdcTotal('${p}')">
-                            <input type="number" class="jdc-sub" data-player="${p}" value="${r180}" placeholder="Race to 180" style="flex: 1; min-width: 100px;" oninput="calcJdcTotal('${p}')">
-                            <input type="number" class="player-score-field" id="total-${p}" data-player="${p}" value="${existingScore}" placeholder="Total" style="flex: 1; min-width: 100px; font-weight: bold; border-color: var(--gold);" readonly>
-                        </div>
-                    </div>
-                `;
-            } else if (isSnapshot) {
-                const fp = existingSubs["Flash Point"] !== undefined ? existingSubs["Flash Point"] : '';
-                const ndc = existingSubs["9 Dart Century"] !== undefined ? existingSubs["9 Dart Century"] : '';
-                const qd = existingSubs["Quick Draw"] !== undefined ? existingSubs["Quick Draw"] : '';
-
-                html += `
-                    <div class="card" style="margin-bottom: 10px; padding: 12px; background: #222;">
-                        <strong>${p}</strong>
-                        <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-                            <input type="number" class="snap-sub" data-player="${p}" value="${fp}" placeholder="Flash Point" style="flex: 1; min-width: 100px;" oninput="calcSnapTotal('${p}')">
-                            <input type="number" class="snap-sub" data-player="${p}" value="${ndc}" placeholder="9 Dart Century" style="flex: 1; min-width: 100px;" oninput="calcSnapTotal('${p}')">
-                            <input type="number" class="snap-sub" data-player="${p}" value="${qd}" placeholder="Quick Draw" style="flex: 1; min-width: 100px;" oninput="calcSnapTotal('${p}')">
-                            <input type="number" class="player-score-field" id="total-${p}" data-player="${p}" value="${existingScore}" placeholder="Total" style="flex: 1; min-width: 100px; font-weight: bold; border-color: var(--gold);" readonly>
-                        </div>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <div class="form-group" style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-                        <label style="width: 150px; margin: 0;">${p}</label>
-                        <input type="number" class="player-score-field" data-player="${p}" value="${existingScore}" placeholder="Enter score">
-                    </div>
-                `;
-            }
-        });
-
-        const btnLabel = editingIndex !== null ? 'Update Event Scores' : 'Submit Scores';
-        html += `<button onclick="submitEventScores()">${btnLabel}</button></div>`;
-        container.innerHTML = html;
+      const btnLabel = editingIndex !== null ? 'Update Event Scores' : 'Submit Scores';
+      html += `<button onclick="submitEventScores()">${btnLabel}</button></div>`;
+      container.innerHTML = html;
     }
 
     window.calcJdcTotal = function(player) {
-        const inputs = document.querySelectorAll(`.jdc-sub[data-player="${player}"]`);
-        let sum = 0;
-        inputs.forEach(i => { sum += parseFloat(i.value) || 0; });
-        const totalElem = document.getElementById(`total-${player}`);
-        if (totalElem) totalElem.value = sum;
+      const inputs = document.querySelectorAll(`.jdc-sub[data-player="${player}"]`);
+      let sum = 0;
+      inputs.forEach(i => { sum += parseFloat(i.value) || 0; });
+      const totalElem = document.getElementById(`total-${player}`);
+      if (totalElem) totalElem.value = sum;
     };
 
     window.calcSnapTotal = function(player) {
-        const inputs = document.querySelectorAll(`.snap-sub[data-player="${player}"]`);
-        let sum = 0;
-        inputs.forEach(i => { sum += parseFloat(i.value) || 0; });
-        const totalElem = document.getElementById(`total-${player}`);
-        if (totalElem) totalElem.value = sum;
+      const inputs = document.querySelectorAll(`.snap-sub[data-player="${player}"]`);
+      let sum = 0;
+      inputs.forEach(i => { sum += parseFloat(i.value) || 0; });
+      const totalElem = document.getElementById(`total-${player}`);
+      if (totalElem) totalElem.value = sum;
     };
 
     function submitEventScores() {
-        const eventSelect = document.getElementById('event-select');
-        const scoreTypeSelect = document.getElementById('score-type');
-        const dateInput = document.getElementById('event-date');
+      const eventSelect = document.getElementById('event-select');
+      const scoreTypeSelect = document.getElementById('score-type');
+      const dateInput = document.getElementById('event-date');
 
-        const eventName = eventSelect ? eventSelect.value : '';
-        const scoreType = scoreTypeSelect ? scoreTypeSelect.value : 'high';
-        const eventDate = dateInput && dateInput.value ? dateInput.value : new Date().toISOString();
+      const eventName = eventSelect ? eventSelect.value : '';
+      const scoreType = scoreTypeSelect ? scoreTypeSelect.value : 'high';
+      const eventDate = dateInput && dateInput.value ? dateInput.value : new Date().toISOString();
 
-        if (!eventName) {
-            alert("Please select an event.");
-            return;
+      if (!eventName) {
+        alert("Please select an event.");
+        return;
+      }
+
+      const results = [];
+      let hasError = false;
+
+      players.forEach(p => {
+        const totalElem = document.querySelector(`.player-score-field[data-player="${p}"]`);
+        const scoreVal = totalElem ? parseFloat(totalElem.value) : NaN;
+
+        if (isNaN(scoreVal)) {
+          hasError = true;
+          return;
         }
 
-        const results = [];
-        let hasError = false;
+        const subscores = {};
+        if (eventName === "JDC Jr") {
+          document.querySelectorAll(`.jdc-sub[data-player="${p}"]`).forEach(input => {
+            subscores[input.placeholder] = parseFloat(input.value) || 0;
+          });
+        } else if (eventName === "Snapshot") {
+          document.querySelectorAll(`.snap-sub[data-player="${p}"]`).forEach(input => {
+            subscores[input.placeholder] = parseFloat(input.value) || 0;
+          });
+        }
 
-        players.forEach(p => {
-            const totalElem = document.querySelector(`.player-score-field[data-player="${p}"]`);
-            const scoreVal = totalElem ? parseFloat(totalElem.value) : NaN;
-
-            if (isNaN(scoreVal)) {
-                hasError = true;
-                return;
-            }
-
-            const subscores = {};
-            if (eventName === "JDC Jr") {
-                document.querySelectorAll(`.jdc-sub[data-player="${p}"]`).forEach(input => {
-                    subscores[input.placeholder] = parseFloat(input.value) || 0;
-                });
-            } else if (eventName === "Snapshot") {
-                document.querySelectorAll(`.snap-sub[data-player="${p}"]`).forEach(input => {
-                    subscores[input.placeholder] = parseFloat(input.value) || 0;
-                });
-            }
-
-            results.push({
-                name: p,
-                score: scoreVal,
-                subscores: subscores
-            });
+        results.push({
+          name: p,
+          score: scoreVal,
+          subscores: subscores
         });
+      });
 
-        if (hasError || results.length === 0) {
-            alert("Please enter valid numerical scores for all players.");
-            return;
-        }
+      if (hasError || results.length === 0) {
+        alert("Please enter valid numerical scores for all players.");
+        return;
+      }
 
-        if (scoreType === 'low') {
-            results.sort((a, b) => a.score - b.score);
+      if (scoreType === 'low') {
+        results.sort((a, b) => a.score - b.score);
+      } else {
+        results.sort((a, b) => b.score - a.score);
+      }
+
+      results.forEach((res, idx) => {
+        if (idx > 0 && res.score === results[idx - 1].score) {
+          res.rank = results[idx - 1].rank;
         } else {
-            results.sort((a, b) => b.score - a.score);
+          res.rank = idx + 1;
         }
+        res.points = pointsMap[res.rank] || 10;
+        res.medal = res.rank === 1 ? "🥇" : (res.rank === 2 ? "🥈" : (res.rank === 3 ? "🥉" : ""));
+      });
 
-        results.forEach((res, idx) => {
-            if (idx > 0 && res.score === results[idx - 1].score) {
-                res.rank = results[idx - 1].rank;
-            } else {
-                res.rank = idx + 1;
-            }
-            res.points = pointsMap[res.rank] || 10;
-            res.medal = res.rank === 1 ? "🥇" : (res.rank === 2 ? "🥈" : (res.rank === 3 ? "🥉" : ""));
-        });
+      const eventRecord = {
+        eventName: eventName,
+        date: eventDate,
+        timestamp: new Date().toISOString(),
+        results: results
+      };
 
-        const eventRecord = {
-            eventName: eventName,
-            date: eventDate,
-            timestamp: new Date().toISOString(),
-            results: results
-        };
+      if (editingIndex !== null) {
+        completedEvents[editingIndex] = eventRecord;
+        editingIndex = null;
+      } else {
+        completedEvents.push(eventRecord);
+      }
 
-        if (editingIndex !== null) {
-            completedEvents[editingIndex] = eventRecord;
-            editingIndex = null;
-        } else {
-            completedEvents.push(eventRecord);
-        }
+      syncLeagueToFirebase();
+      updatePlayerProfiles(eventRecord);
+      updateLeaderboard();
+      renderCompletedEvents();
 
-        syncLeagueToFirebase();
-        updatePlayerProfiles(eventRecord);
-        updateLeaderboard();
-        renderCompletedEvents();
-
-        if (eventSelect) eventSelect.value = '';
-        renderScoreInputs();
+      if (eventSelect) eventSelect.value = '';
+      renderScoreInputs();
     }
 
     function editEvent(index) {
-        editingIndex = index;
-        const evt = completedEvents[index];
+      editingIndex = index;
+      const evt = completedEvents[index];
 
-        const eventSelect = document.getElementById('event-select');
-        if (eventSelect) eventSelect.value = evt.eventName;
+      const eventSelect = document.getElementById('event-select');
+      if (eventSelect) eventSelect.value = evt.eventName;
 
-        const dateInput = document.getElementById('event-date');
-        if (dateInput && (evt.date || evt.timestamp)) {
-            const raw = evt.date || evt.timestamp;
-            dateInput.value = raw.slice(0, 16);
-        }
+      const dateInput = document.getElementById('event-date');
+      if (dateInput && (evt.date || evt.timestamp)) {
+        const raw = evt.date || evt.timestamp;
+        dateInput.value = raw.slice(0, 16);
+      }
 
-        renderScoreInputs(evt);
+      renderScoreInputs(evt);
     }
 
     function deleteEvent(index) {
-        if (!confirm("Are you sure you want to delete this event?")) return;
-        completedEvents.splice(index, 1);
-        syncLeagueToFirebase();
-        updateLeaderboard();
-        renderCompletedEvents();
+      if (!confirm("Are you sure you want to delete this event?")) return;
+      completedEvents.splice(index, 1);
+      syncLeagueToFirebase();
+      updateLeaderboard();
+      renderCompletedEvents();
     }
 
     function updateLeaderboard() {
-        const totals = {};
+      const totals = {};
 
-        completedEvents.forEach(evt => {
-            const rankCounts = {};
-            evt.results.forEach(res => {
-                rankCounts[res.rank] = (rankCounts[res.rank] || 0) + 1;
-            });
-
-            evt.results.forEach(res => {
-                if (!totals[res.name]) {
-                    totals[res.name] = { points: 0, wins: 0, losses: 0, ties: 0 };
-                }
-                totals[res.name].points += res.points || 0;
-
-                const isTie = rankCounts[res.rank] > 1;
-                if (isTie && res.rank === 1) {
-                    totals[res.name].ties++;
-                } else if (res.rank === 1) {
-                    totals[res.name].wins++;
-                } else {
-                    totals[res.name].losses++;
-                }
-            });
+      completedEvents.forEach(evt => {
+        const rankCounts = {};
+        evt.results.forEach(res => {
+          rankCounts[res.rank] = (rankCounts[res.rank] || 0) + 1;
         });
 
-        const leaderboardData = Object.keys(totals).map(name => ({
-            name: name,
-            points: totals[name].points,
-            wins: totals[name].wins,
-            losses: totals[name].losses,
-            ties: totals[name].ties
-        }));
+        evt.results.forEach(res => {
+          if (!totals[res.name]) {
+            totals[res.name] = { points: 0, wins: 0, losses: 0, ties: 0 };
+          }
+          totals[res.name].points += res.points || 0;
 
-        leaderboardData.sort((a, b) => b.points - a.points);
-
-        const tbody = document.getElementById('leaderboard-body');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-
-        leaderboardData.forEach((player, idx) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${idx + 1}</td>
-                <td>
-                    <a href="#" onclick="showPlayerProfile('${player.name}'); return false;" style="color: var(--gold); font-weight: bold; text-decoration: underline; cursor: pointer;">
-                        ${player.name}
-                    </a>
-                </td>
-                <td><strong>${player.points}</strong></td>
-                <td>${player.wins}</td>
-                <td>${player.losses}</td>
-                <td>${player.ties}</td>
-            `;
-            tbody.appendChild(tr);
+          const isTie = rankCounts[res.rank] > 1;
+          if (isTie && res.rank === 1) {
+            totals[res.name].ties++;
+          } else if (res.rank === 1) {
+            totals[res.name].wins++;
+          } else {
+            totals[res.name].losses++;
+          }
         });
+      });
+
+      const leaderboardData = Object.keys(totals).map(name => ({
+        name: name,
+        points: totals[name].points,
+        wins: totals[name].wins,
+        losses: totals[name].losses,
+        ties: totals[name].ties
+      }));
+
+      leaderboardData.sort((a, b) => b.points - a.points);
+
+      const tbody = document.getElementById('leaderboard-body');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      leaderboardData.forEach((player, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td>
+            <a href="#" onclick="showPlayerProfile('${player.name}'); return false;" style="color: var(--gold); font-weight: bold; text-decoration: underline; cursor: pointer;">
+              ${player.name}
+            </a>
+          </td>
+          <td><strong>${player.points}</strong></td>
+          <td>${player.wins}</td>
+          <td>${player.losses}</td>
+          <td>${player.ties}</td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
     function renderCompletedEvents() {
-        const container = document.getElementById('completed-events-log');
-        if (!container) return;
+      const container = document.getElementById('completed-events-log');
+      if (!container) return;
 
-        if (completedEvents.length === 0) {
-            container.innerHTML = '<p style="color: var(--text-muted);">No completed events yet.</p>';
-            return;
-        }
+      if (completedEvents.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted);">No completed events yet.</p>';
+        return;
+      }
 
-        let html = '';
+      let html = '';
+      [...completedEvents].reverse().forEach((evt, revIdx) => {
+        const actualIdx = completedEvents.length - 1 - revIdx;
+        const rawDate = evt.date || evt.timestamp;
+        const formattedDate = rawDate ? new Date(rawDate).toLocaleString() : '';
+        const dateDisplay = formattedDate ? ` <span style="font-weight: normal; color: var(--text-muted); font-size: 0.85em;">(${formattedDate})</span>` : '';
 
-        [...completedEvents].reverse().forEach((evt, revIdx) => {
-            const actualIdx = completedEvents.length - 1 - revIdx;
+        html += `
+          <div class="event-card">
+            <div class="event-header">
+              <strong>${evt.eventName}${dateDisplay}</strong>
+              <div class="event-actions">
+                <button style="background: #4caf50;" onclick="editEvent(${actualIdx})">✏️ Edit</button>
+                <button class="btn-danger" onclick="deleteEvent(${actualIdx})">🗑️ Delete</button>
+              </div>
+            </div>
+            <ul style="margin: 5px 0 0 0; padding-left: 20px;">
+        `;
 
-            const rawDate = evt.date || evt.timestamp;
-            const formattedDate = rawDate ? new Date(rawDate).toLocaleString() : '';
-            const dateDisplay = formattedDate ? ` <span style="font-weight: normal; color: var(--text-muted); font-size: 0.85em;">(${formattedDate})</span>` : '';
+        evt.results.forEach(res => {
+          let subscoresText = '';
+          if (res.subscores && typeof res.subscores === 'object') {
+            const subDetails = Object.entries(res.subscores)
+              .filter(([_, val]) => val !== '' && val !== null && !isNaN(val))
+              .map(([key, val]) => `${key}: ${val}`)
+              .join(', ');
+            if (subDetails) {
+              subscoresText = ` <span style="color: var(--text-muted); font-size: 0.9em;">(${subDetails})</span>`;
+            }
+          }
 
-            html += `
-                <div class="event-card">
-                    <div class="event-header">
-                        <strong>${evt.eventName}${dateDisplay}</strong>
-                        <div class="event-actions">
-                            <button style="background: #4caf50;" onclick="editEvent(${actualIdx})">✏️ Edit</button>
-                            <button class="btn-danger" onclick="deleteEvent(${actualIdx})">🗑️ Delete</button>
-                        </div>
-                    </div>
-                    <ul style="margin: 5px 0 0 0; padding-left: 20px;">
-            `;
-
-            evt.results.forEach(res => {
-                let subscoresText = '';
-
-                if (res.subscores && typeof res.subscores === 'object') {
-                    const subDetails = Object.entries(res.subscores)
-                        .filter(([_, val]) => val !== '' && val !== null && !isNaN(val))
-                        .map(([key, val]) => `${key}: ${val}`)
-                        .join(', ');
-
-                    if (subDetails) {
-                        subscoresText = ` <span style="color: var(--text-muted); font-size: 0.9em;">(${subDetails})</span>`;
-                    }
-                }
-
-                html += `
-                    <li>
-                        <strong>${res.rank}. ${res.name}</strong> - <strong>${res.score}</strong> total${subscoresText} 
-                        <span style="color: var(--gold); font-weight: bold;">(+${res.points || 0} pts)</span>
-                    </li>
-                `;
-            });
-
-            html += `
-                    </ul>
-                </div>
-            `;
+          html += `
+            <li>
+              <strong>${res.rank}. ${res.name}</strong> - <strong>${res.score}</strong> total${subscoresText}
+              <span style="color: var(--gold); font-weight: bold;">(+${res.points || 0} pts)</span>
+            </li>
+          `;
         });
 
-        container.innerHTML = html;
+        html += `
+            </ul>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
     }
 
     async function showPlayerProfile(playerName) {
-        if (!playerName) return;
-        const pName = playerName.trim();
-        const playerRef = doc(db, "players", pName);
+      if (!playerName) return;
+      const pName = playerName.trim();
+      const playerRef = doc(db, "players", pName);
 
-        try {
-            const docSnap = await getDoc(playerRef);
-            if (!docSnap.exists()) {
-                alert(`No lifetime profile data found for ${pName}.`);
-                return;
-            }
-
-            const data = docSnap.data();
-            const history = data.gameHistory || [];
-
-            // 1. Calculate League Ranks across all Firestore leagues
-            const leagueRanks = [];
-            const leaguesSnapshot = await getDocs(collection(db, "leagues"));
-
-            leaguesSnapshot.forEach(lDoc => {
-                const lData = lDoc.data();
-                if (!lData.completedEvents) return;
-
-                const totals = {};
-                lData.completedEvents.forEach(evt => {
-                    evt.results.forEach(res => {
-                        totals[res.name] = (totals[res.name] || 0) + (res.points || 0);
-                    });
-                });
-
-                if (totals[pName] !== undefined) {
-                    const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-                    const rankIdx = sorted.findIndex(([name]) => name === pName);
-                    if (rankIdx !== -1) {
-                        leagueRanks.push({
-                            league: lData.leagueName || lDoc.id,
-                            rank: rankIdx + 1,
-                            points: totals[pName],
-                            totalPlayers: sorted.length
-                        });
-                    }
-                }
-            });
-
-            const leagueRanksHtml = leagueRanks.length > 0 
-                ? leagueRanks.map(r => `
-                    <div style="background: var(--input-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); flex: 1; min-width: 140px;">
-                        <div style="font-size: 0.85em; color: var(--text-muted);">${r.league}</div>
-                        <div style="font-size: 1.1em; font-weight: bold; color: var(--gold);">Rank #${r.rank} <span style="font-size: 0.8em; font-weight: normal; color: var(--text-color);">(${r.points} pts)</span></div>
-                    </div>
-                `).join('')
-                : '<p style="color: var(--text-muted); font-size: 0.9em;">No active league standings.</p>';
-
-            // 2. Group games by unique game name and aggregate stats
-            const gameStats = {};
-            history.forEach(g => {
-                const gName = g.event;
-                if (!gameStats[gName]) {
-                    gameStats[gName] = {
-                        wins: 0,
-                        losses: 0,
-                        ties: 0,
-                        totalPoints: 0,
-                        matches: []
-                    };
-                }
-
-                const isWin = g.rank === 1;
-                const isLoss = g.rank > 1;
-
-                if (isWin) gameStats[gName].wins++;
-                else if (isLoss) gameStats[gName].losses++;
-
-                gameStats[gName].totalPoints += g.points || 0;
-                gameStats[gName].matches.push(g);
-            });
-
-            let gameAccordionHtml = Object.entries(gameStats).map(([gameName, stats], idx) => {
-                const matchesHtml = stats.matches.map(m => {
-                    const subDetails = m.subscores && Object.keys(m.subscores).length > 0
-                        ? ` (${Object.entries(m.subscores).map(([k, v]) => `${k}:${v}`).join(', ')})`
-                        : '';
-                    const dateStr = m.date ? new Date(m.date).toLocaleDateString() : '';
-                    return `
-                        <div style="padding: 6px 0; border-bottom: 1px solid #333; font-size: 0.88em;">
-                            <strong>[${m.league}]</strong> Score: <strong>${m.score}</strong>${subDetails} | Rank #${m.rank} <span style="color: var(--gold);">(+${m.points} pts)</span>
-                            <span style="color: var(--text-muted); float: right;">${dateStr}</span>
-                        </div>
-                    `;
-                }).reverse().join('');
-
-                return `
-                    <div style="background: #252525; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 8px; overflow: hidden;">
-                        <div onclick="const el = document.getElementById('game-details-${idx}'); el.style.display = el.style.display === 'none' ? 'block' : 'none';" 
-                             style="padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-                            <div>
-                                <strong style="color: var(--gold); font-size: 1.05em;">🎯 ${gameName}</strong>
-                                <span style="margin-left: 10px; font-size: 0.85em; color: var(--text-muted);">(${stats.matches.length} played)</span>
-                            </div>
-                            <div style="font-size: 0.9em;">
-                                <strong>${stats.wins}W - ${stats.losses}L - ${stats.ties}T</strong> 
-                                <span style="color: var(--accent-color); margin-left: 8px;">(+${stats.totalPoints} pts)</span>
-                                <span style="margin-left: 8px; color: var(--text-muted);">▼</span>
-                            </div>
-                        </div>
-                        <div id="game-details-${idx}" style="display: none; padding: 10px 14px; background: #1a1a1a; border-top: 1px solid var(--border-color);">
-                            ${matchesHtml}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            const modalHtml = `
-                <div id="player-modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000;">
-                    <div style="background: var(--card-bg); padding: 25px; border-radius: 8px; max-width: 580px; width: 90%; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative;">
-                        <button onclick="document.getElementById('player-modal-overlay').remove()" style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: white; font-size: 1.3em; cursor: pointer;">✖</button>
-                        
-                        <h2 style="color: var(--gold); margin-top: 0; margin-bottom: 5px;">👤 ${data.name}'s Profile</h2>
-                        <p style="margin-top: 0; color: var(--text-muted); font-size: 0.95em;">
-                            <strong>Lifetime Points:</strong> ${data.totalPoints || 0} &nbsp;|&nbsp; 
-                            <strong>Career Record:</strong> ${data.wins || 0}W - ${data.losses || 0}L - ${data.ties || 0}T
-                        </p>
-
-                        <!-- League Standings Section -->
-                        <h3 style="color: var(--accent-color); font-size: 1em; margin-top: 18px; margin-bottom: 8px;">🏆 League Standings</h3>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px;">
-                            ${leagueRanksHtml}
-                        </div>
-
-                        <hr style="border-color: var(--border-color); margin: 15px 0;">
-
-                        <!-- Per-Game History Breakdown -->
-                        <h3 style="color: var(--accent-color); font-size: 1em; margin-bottom: 10px;">📊 Game Breakdown & Match History</h3>
-                        <div>
-                            ${gameAccordionHtml || '<p style="color: var(--text-muted);">No recorded game history.</p>'}
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            const oldModal = document.getElementById('player-modal-overlay');
-            if (oldModal) oldModal.remove();
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-        } catch (err) {
-            console.error("Error fetching player profile:", err);
-            alert("Failed to load player profile.");
+      try {
+        const docSnap = await getDoc(playerRef);
+        if (!docSnap.exists()) {
+          alert(`No lifetime profile data found for ${pName}.`);
+          return;
         }
+
+        const data = docSnap.data();
+        const history = data.gameHistory || [];
+
+        // 1. Calculate League Ranks across all Firestore leagues with deduplication & aggregation
+        const leaguesSnapshot = await getDocs(collection(db, "leagues"));
+        const unifiedLeagues = {};
+
+        // Merge league documents by canonical league name (e.g., handles "HAAL #1" across multiple docs)
+        leaguesSnapshot.forEach(lDoc => {
+          const lData = lDoc.data();
+          if (!lData.completedEvents || !Array.isArray(lData.completedEvents)) return;
+
+          const rawLeagueName = lData.leagueName || lDoc.id;
+          const canonicalName = rawLeagueName.trim();
+          const key = canonicalName.toLowerCase();
+
+          if (!unifiedLeagues[key]) {
+            unifiedLeagues[key] = {
+              displayName: canonicalName,
+              events: []
+            };
+          }
+
+          // In case documents are duplicate snapshots, choose the one with more events
+          if (lData.completedEvents.length > unifiedLeagues[key].events.length) {
+            unifiedLeagues[key].events = lData.completedEvents;
+          }
+        });
+
+        const leagueRanks = [];
+        Object.values(unifiedLeagues).forEach(leagueObj => {
+          const totals = {};
+          leagueObj.events.forEach(evt => {
+            if (!evt.results) return;
+            evt.results.forEach(res => {
+              totals[res.name] = (totals[res.name] || 0) + (res.points || 0);
+            });
+          });
+
+          if (totals[pName] !== undefined) {
+            const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+            const rankIdx = sorted.findIndex(([name]) => name === pName);
+            if (rankIdx !== -1) {
+              leagueRanks.push({
+                league: leagueObj.displayName,
+                rank: rankIdx + 1,
+                points: totals[pName],
+                totalPlayers: sorted.length
+              });
+            }
+          }
+        });
+
+        const leagueRanksHtml = leagueRanks.length > 0 ? leagueRanks.map(r => `
+          <div style="background: var(--input-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); flex: 1; min-width: 140px;">
+            <div style="font-size: 0.85em; color: var(--text-muted);">${r.league}</div>
+            <div style="font-size: 1.1em; font-weight: bold; color: var(--gold);">Rank #${r.rank} <span style="font-size: 0.8em; font-weight: normal; color: var(--text-color);">(${r.points} pts)</span></div>
+          </div>
+        `).join('') : '<p style="color: var(--text-muted); font-size: 0.9em;">No active league standings.</p>';
+
+        // 2. Group games by unique game name and aggregate stats
+        const gameStats = {};
+        history.forEach(g => {
+          const gName = g.event;
+          if (!gameStats[gName]) {
+            gameStats[gName] = {
+              wins: 0,
+              losses: 0,
+              ties: 0,
+              totalPoints: 0,
+              matches: []
+            };
+          }
+
+          const isWin = g.rank === 1;
+          const isLoss = g.rank > 1;
+
+          if (isWin) gameStats[gName].wins++;
+          else if (isLoss) gameStats[gName].losses++;
+
+          gameStats[gName].totalPoints += (g.points || 0);
+          gameStats[gName].matches.push(g);
+        });
+
+        let gameAccordionHtml = Object.entries(gameStats).map(([gameName, stats], idx) => {
+          const matchesHtml = stats.matches.map(m => {
+            const subDetails = m.subscores && Object.keys(m.subscores).length > 0
+              ? ` (${Object.entries(m.subscores).map(([k, v]) => `${k}:${v}`).join(', ')})`
+              : '';
+            const dateStr = m.date ? new Date(m.date).toLocaleDateString() : '';
+
+            return `
+              <div style="padding: 6px 0; border-bottom: 1px solid #333; font-size: 0.88em;">
+                <strong>[${m.league}]</strong> Score: <strong>${m.score}</strong>${subDetails} | Rank #${m.rank} <span style="color: var(--gold);">(+${m.points} pts)</span>
+                <span style="color: var(--text-muted); float: right;">${dateStr}</span>
+              </div>
+            `;
+          }).reverse().join('');
+
+          return `
+            <div style="background: #252525; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 8px; overflow: hidden;">
+              <div onclick="const el = document.getElementById('game-details-${idx}'); el.style.display = el.style.display === 'none' ? 'block' : 'none';" 
+                   style="padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+                <div>
+                  <strong style="color: var(--gold); font-size: 1.05em;">🎯 ${gameName}</strong>
+                  <span style="margin-left: 10px; font-size: 0.85em; color: var(--text-muted);">(${stats.matches.length} played)</span>
+                </div>
+                <div style="font-size: 0.9em;">
+                  <strong>${stats.wins}W - ${stats.losses}L - ${stats.ties}T</strong>
+                  <span style="color: var(--accent-color); margin-left: 8px;">(+${stats.totalPoints} pts)</span>
+                  <span style="margin-left: 8px; color: var(--text-muted);">▼</span>
+                </div>
+              </div>
+              <div id="game-details-${idx}" style="display: none; padding: 10px 14px; background: #1a1a1a; border-top: 1px solid var(--border-color);">
+                ${matchesHtml}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        const modalHtml = `
+          <div id="player-modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000;">
+            <div style="background: var(--card-bg); padding: 25px; border-radius: 8px; max-width: 580px; width: 90%; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative;">
+              <button onclick="document.getElementById('player-modal-overlay').remove()" style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: white; font-size: 1.3em; cursor: pointer;">✖</button>
+              <h2 style="color: var(--gold); margin-top: 0; margin-bottom: 5px;">👤 ${data.name}'s Profile</h2>
+              <p style="margin-top: 0; color: var(--text-muted); font-size: 0.95em;">
+                <strong>Lifetime Points:</strong> ${data.totalPoints || 0} &nbsp;|&nbsp; <strong>Career Record:</strong> ${data.wins || 0}W - ${data.losses || 0}L - ${data.ties || 0}T
+              </p>
+
+              <!-- League Standings Section -->
+              <h3 style="color: var(--accent-color); font-size: 1em; margin-top: 18px; margin-bottom: 8px;">🏆 League Standings</h3>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px;">
+                ${leagueRanksHtml}
+              </div>
+
+              <hr style="border-color: var(--border-color); margin: 15px 0;">
+
+              <!-- Per-Game History Breakdown -->
+              <h3 style="color: var(--accent-color); font-size: 1em; margin-bottom: 10px;">📊 Game Breakdown & Match History</h3>
+              <div>
+                ${gameAccordionHtml || '<p style="color: var(--text-muted);">No recorded game history.</p>'}
+              </div>
+            </div>
+          </div>
+        `;
+
+        const oldModal = document.getElementById('player-modal-overlay');
+        if (oldModal) oldModal.remove();
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+      } catch (err) {
+        console.error("Error fetching player profile:", err);
+        alert("Failed to load player profile.");
+      }
     }
 
     // Window exposures for inline button listeners
@@ -1100,10 +1134,10 @@
 
     // Initialization
     window.addEventListener('DOMContentLoaded', async () => {
-        setNowDate();
-        await fetchSavedLeagues();
-        await loadSelectedLeague();
+      setNowDate();
+      await fetchSavedLeagues();
+      await loadSelectedLeague();
     });
-</script>
+  </script>
 </body>
 </html>
