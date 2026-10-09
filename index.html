@@ -923,15 +923,21 @@
             const dateDisplay = formattedDate ? ` <span style="font-weight: normal; color: var(--text-muted); font-size: 0.85em;">(${formattedDate})</span>` : '';
 
             html += `
-                <div class="event-card">
-                    <div class="event-header">
-                        <strong>${evt.eventName}${dateDisplay}</strong>
-                        <div class="event-actions">
+                <div class="event-card" style="padding: 0; overflow: hidden;">
+                    <div class="event-header" 
+                         onclick="const el = document.getElementById('event-log-details-${actualIdx}'); el.style.display = el.style.display === 'none' ? 'block' : 'none';" 
+                         style="padding: 12px 15px; cursor: pointer; user-select: none; margin-bottom: 0;">
+                        <div>
+                            <strong>🎯 ${evt.eventName}${dateDisplay}</strong>
+                            <span style="margin-left: 8px; color: var(--text-muted); font-size: 0.85em;">▼</span>
+                        </div>
+                        <div class="event-actions" onclick="event.stopPropagation();">
                             <button style="background: #4caf50;" onclick="editEvent(${actualIdx})">✏️ Edit</button>
                             <button class="btn-danger" onclick="deleteEvent(${actualIdx})">🗑️ Delete</button>
                         </div>
                     </div>
-                    <ul style="margin: 5px 0 0 0; padding-left: 20px;">
+                    <div id="event-log-details-${actualIdx}" style="display: none; padding: 12px 15px; background: #1a1a1a; border-top: 1px solid var(--border-color);">
+                        <ul style="margin: 0; padding-left: 20px;">
             `;
 
             evt.results.forEach(res => {
@@ -949,7 +955,7 @@
                 }
 
                 html += `
-                    <li>
+                    <li style="margin-bottom: 4px;">
                         <strong>${res.rank}. ${res.name}</strong> - <strong>${res.score}</strong> total${subscoresText} 
                         <span style="color: var(--gold); font-weight: bold;">(+${res.points || 0} pts)</span>
                     </li>
@@ -957,14 +963,14 @@
             });
 
             html += `
-                    </ul>
+                        </ul>
+                    </div>
                 </div>
             `;
         });
 
         container.innerHTML = html;
     }
-
     async function showPlayerProfile(playerName) {
         if (!playerName) return;
         const pName = playerName.trim();
