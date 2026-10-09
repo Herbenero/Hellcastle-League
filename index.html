@@ -1078,18 +1078,17 @@
                     gameStats[gName] = { wins: 0, losses: 0, ties: 0, totalPoints: 0, matches: [] };
                 }
 
-                const isTie = g.isTie || (deduplicatedHistory.filter(other => other.event === g.event && other.date === g.date && other.rank === g.rank).length > 1);
-
-                if (isTie) {
-                    gameStats[gName].ties++;
-                    cleanLifetimeTies++;
-                } else if (g.rank === 1) {
-                    gameStats[gName].wins++;
-                    cleanLifetimeWins++;
-                } else if (g.rank > 1) {
-                    gameStats[gName].losses++;
-                    cleanLifetimeLosses++;
-                }
+               const isTie = Boolean(g.isTie);
+if (isTie) {
+    gameStats[gName].ties++;
+    cleanLifetimeTies++;
+} else if (g.rank === 1) {
+    gameStats[gName].wins++;
+    cleanLifetimeWins++;
+} else if (g.rank > 1) {
+    gameStats[gName].losses++;
+    cleanLifetimeLosses++;
+}
 
                 const pts = (g.points || 0);
                 gameStats[gName].totalPoints += pts;
