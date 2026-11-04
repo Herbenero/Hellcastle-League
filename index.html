@@ -687,10 +687,14 @@
         if (totalElem) totalElem.value = sum;
     };
 
-    window.calcShoveTotal = function(player) {
-    const inputs = document.querySelectorAll(`.shove-sub[data-player="${player}"]`);
-    let sum = 0;
-    inputs.forEach(i => { sum += parseFloat(i.value) || 0; });
+   window.calcShoveTotal = function(player) {
+    const marksInput = document.querySelector(`.shove-sub[data-player="${player}"][placeholder="Marks"]`);
+    const receivedInput = document.querySelector(`.shove-sub[data-player="${player}"][placeholder="Received"]`);
+    
+    const marks = parseFloat(marksInput ? marksInput.value : 0) || 0;
+    const received = parseFloat(receivedInput ? receivedInput.value : 0) || 0;
+    
+    const sum = marks + received;
     const totalElem = document.getElementById(`total-${player}`);
     if (totalElem) totalElem.value = sum;
 };
