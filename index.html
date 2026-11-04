@@ -688,12 +688,12 @@
     };
 
     window.calcShoveTotal = function(player) {
-        const inputs = document.querySelectorAll(`.shove-sub[data-player="${player}"]`);
-        let sum = 0;
-        inputs.forEach(i => { sum += parseFloat(i.value) || 0; });
-        const totalElem = document.getElementById(`total-${player}`);
-        if (totalElem) totalElem.value = sum;
-    };
+    const inputs = document.querySelectorAll(`.shove-sub[data-player="${player}"]`);
+    let sum = 0;
+    inputs.forEach(i => { sum += parseFloat(i.value) || 0; });
+    const totalElem = document.getElementById(`total-${player}`);
+    if (totalElem) totalElem.value = sum;
+};
 
     function submitEventScores() {
         const eventSelect = document.getElementById('event-select');
