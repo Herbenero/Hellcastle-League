@@ -839,6 +839,18 @@
                             <div onclick="const el = document.getElementById('game-group-${dateGroupIdx}-${gameGroupIdx}'); el.style.display = el.style.display === 'none' ? 'block' : 'none';" style="padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; background: #2a2a2a;">
                                 <div>
                                     <strong style="color: var(--accent-color);">🎯 ${gameName}</strong>
+                    `;
+
+                    // Check if any match in this group has notes attached
+                    const hasNotes = matchEntries.some(({ event: evt }) => 
+                        evt.results && evt.results.some(r => r.notes && r.notes.trim() !== '')
+                    );
+
+                    if (hasNotes) {
+                        html += `<span style="color: #00bcd4; margin-left: 4px;" title="Contains text notes">●</span>`;
+                    }
+
+                    html += `
                                     <span style="margin-left: 8px; color: var(--text-muted); font-size: 0.85em;">(${matchEntries.length} ${matchEntries.length === 1 ? 'game' : 'games'})</span>
                                 </div>
                                 <span style="color: var(--text-muted); font-size: 0.85em;">▼</span>
