@@ -733,94 +733,100 @@
         const totalElem = document.getElementById(`total-${player}`);
         if (totalElem) totalElem.value = sum;
     };
+    // Inside renderScoreInputs(), right before the submit button HTML string:
+let existingMatchNote = (prefillData && prefillData.matchNote) ? prefillData.matchNote : '';
 
-    function submitEventScores() {
-        const eventSelect = document.getElementById('event-select');
-        const scoreTypeSelect = document.getElementById('score-type');
-        const dateInput = document.getElementById('event-date');
+html += `
+    <div class="form-group" style="margin-top: 15px;">
+        <label for="match-note-input">Match Notes</label>
+        <input type="text" id="match-note-input" value="${existingMatchNote}" placeholder="Enter match notes, highlights, or details...">
+    </div>
+`;
 
-        const eventName = eventSelect ? eventSelect.value : '';
-        const scoreType = scoreTypeSelect ? scoreTypeSelect.value : 'high';
-        const eventDate = dateInput && dateInput.value ? dateInput.value : new Date().toISOString();
+   function submitEventScores() {
+    const eventSelect = document.getElementById('event-select');
+    const scoreTypeSelect = document.getElementById('score-type');
+    const dateInput = document.getElementById('event-date');
+    const matchNoteInput = document.getElementById('match-note-input'); // If using Option B
+    
+    const eventName = eventSelect ? eventSelect.value : '';
+    const scoreType = scoreTypeSelect ? scoreTypeSelect.value : 'high';
+    const eventDate = dateInput && dateInput.value ? dateInput.value : new Date().toISOString();
 
-        if (!eventName) {
-            alert("Please select an event.");
-            return;
-        }
-
-        const results = [];
-        let hasError = false;
-
-        players.forEach(p => {
-            const totalElem = document.querySelector(`.player-score-field[data-player="${p}"]`);
-            const scoreVal = totalElem ? parseFloat(totalElem.value) : NaN;
-
-            if (isNaN(scoreVal)) {
-                hasError = true;
-                return;
-            }
-
-            const subscores = {};
-            if (eventName === "JDC Jr") {
-                document.querySelectorAll(`.jdc-sub[data-player="${p}"]`).forEach(input => {
-                    subscores[input.placeholder] = parseFloat(input.value) || 0;
-                });
-            } else if (eventName === "Snapshot") {
-                document.querySelectorAll(`.snap-sub[data-player="${p}"]`).forEach(input => {
-                    subscores[input.placeholder] = parseFloat(input.value) || 0;
-                });
-            }
-
-            results.push({
-                name: p,
-                score: scoreVal,
-                subscores: subscores
-            });
-        });
-
-        if (hasError || results.length === 0) {
-            alert("Please enter valid numerical scores for all players.");
-            return;
-        }
-
-        if (scoreType === 'low') {
-            results.sort((a, b) => a.score - b.score);
-        } else {
-            results.sort((a, b) => b.score - a.score);
-        }
-
-        results.forEach((res, idx) => {
-            if (idx > 0 && res.score === results[idx - 1].score) {
-                res.rank = results[idx - 1].rank;
-            } else {
-                res.rank = idx + 1;
-            }
-            res.points = pointsMap[res.rank] || 10;
-            res.medal = res.rank === 1 ? "🥇" : (res.rank === 2 ? "🥈" : (res.rank === 3 ? "🥉" : ""));
-        });
-
-        const eventRecord = {
-            eventName: eventName,
-            date: eventDate,
-            timestamp: new Date().toISOString(),
-            results: results
-        };
-
-        if (editingIndex !== null) {
-            completedEvents[editingIndex] = eventRecord;
-            editingIndex = null;
-        } else {
-            completedEvents.push(eventRecord);
-        }
-
-        syncLeagueToFirebase();
-        updatePlayerProfiles(eventRecord);
-        updateLeaderboard();
-        renderCompletedEvents();
-
-        if (eventSelect) eventSelect.value = '';
-        renderScoreInputs();
+    if (!eventName) {
+        alert("Please select an event.");
+        return;
     }
+
+    const results = [];
+    let hasError = false;
+
+    players.forEach(p => {
+        const totalElem = document.querySelector(`.player-score-field[data-player="${p}"]`);
+        const noteElem = document.querySelector(`.player-note-field[data-player="${p}"]`); // If using Option A
+        
+        const scoreVal = totalElem ? parseFloat(totalElem.value) : NaN;
+        const noteVal = noteElem ? noteElem.value.trim() : '';
+
+        if (isNaN(scoreVal)) {
+            hasError = true;
+            return;
+        }
+
+        // ... subscore calculations if applicable ...
+
+        results.push({
+            name: p, 
+            score: scoreVal, 
+            subscores: subscores,
+            note: noteVal // <-- Saves individual player note
+        });
+    });
+
+    if (hasError || results.length === 0) {
+        alert("Please enter valid numerical scores for all players.");
+        return;
+    }
+
+    // Sort rankings...
+    if (scoreType === 'low') {
+        results.sort((a, b) => a.score - b.score);
+    } else {
+        results.sort((a, b) => b.score - a.score);
+    }
+
+    results.forEach((res, idx) => {
+        if (idx > 0 && res.score === results[idx - 1].score) {
+            res.rank = results[idx - 1].rank;
+        } else {
+            res.rank = idx + 1;
+        }
+        res.points = pointsMap[res.rank] || 10;
+    });
+
+    const eventRecord = {
+        eventName: eventName,
+        date: eventDate,
+        timestamp: new Date().toISOString(),
+        matchNote: matchNoteInput ? matchNoteInput.value.trim() : '', // <-- Saves match-wide note if using Option B
+        results: results
+    };
+
+    if (editingIndex !== null) {
+        completedEvents[editingIndex] = eventRecord;
+        editingIndex = null;
+    } else {
+        completedEvents.push(eventRecord);
+    }
+
+    syncLeagueToFirebase();
+    updatePlayerProfiles(eventRecord);
+    updateLeaderboard();
+    renderCompletedEvents();
+
+    if (eventSelect) eventSelect.value = '';
+    renderScoreInputs();
+}
 
     function editEvent(index) {
         editingIndex = index;
@@ -1012,6 +1018,17 @@
                             subscoresText = ` <span style="color: var(--text-muted); font-size: 0.85em;">(${subDetails})</span>`;
                         }
                     }
+                    let noteText = res.note ? ` <span style="color: var(--text-muted); font-style: italic;">"${res.note}"</span>` : '';
+
+    html += ` 
+        <li style="margin-bottom: 3px; font-size: 0.9em;"> 
+            <strong>${res.rank}. ${res.name}</strong> - <strong>${res.score}</strong> total${subscoresText}${noteText} <span style="color: var(--gold); font-weight: bold;">(+${res.points || 0} pts)</span> 
+        </li> 
+    `;
+});
+                if (evt.matchNote) {
+    html += `<div style="margin-top: 4px; font-size: 0.85em; color: var(--text-muted); font-style: italic;">📝 Note: ${evt.matchNote}</div>`;
+}
 
                     html += `
                             <li style="margin-bottom: 3px; font-size: 0.9em;">
