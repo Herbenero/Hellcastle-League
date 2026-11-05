@@ -160,10 +160,35 @@
             align-items: center;
             gap: 15px;
         }
+        #high-score-banner {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50px);
+    background: linear-gradient(135deg, #7c3aed, #06b6d4);
+    color: #ffffff;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-weight: bold;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#high-score-banner.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
     </style>
 </head>
 <body>
-
+<div id="high-score-banner">
+    🏆 <span id="banner-text">New High Score Set!</span>
+</div>
 <div class="container">
     <h1>🏆 Hellcastle Archery Arena League</h1>
 
@@ -698,7 +723,47 @@
     const totalElem = document.getElementById(`total-${player}`);
     if (totalElem) totalElem.value = sum;
 };
+function checkAndDisplayHighScore(eventName, athleteName, scoreValue, scoringMetric, subscoreName = null) {
+    // 1. Gather all past scores for this specific event (and subscore category if applicable) from your data store/DOM
+    let pastScores = [];
+    
+    // Scan your event log entries
+    document.querySelectorAll('.event-log-entry').forEach(entry => {
+        // (Ensure your parsing matches how your app structures past logs)
+    });
 
+    // Determine if it's a new record
+    let isNewRecord = false;
+    if (pastScores.length === 0) {
+        isNewRecord = true; // First time recording this metric
+    } else {
+        let currentBest = scoringMetric === 'High Score Wins' ? Math.max(...pastScores) : Math.min(...pastScores);
+        if (scoringMetric === 'High Score Wins' && scoreValue > currentBest) {
+            isNewRecord = true;
+        } else if (scoringMetric === 'Low Score Wins (Time/Penalty)' && scoreValue < currentBest) {
+            isNewRecord = true;
+        }
+    }
+
+    // 2. Trigger Banner if a new record is broken
+    if (isNewRecord) {
+        const banner = document.getElementById('high-score-banner');
+        const bannerText = document.getElementById('banner-text');
+        
+        if (subscoreName) {
+            bannerText.textContent = `🎯 New Subscore Record! ${athleteName} set a record in ${subscoreName} (${eventName}): ${scoreValue}!`;
+        } else {
+            bannerText.textContent = `🌟 New Match Record! ${athleteName} set a new high score for ${eventName}: ${scoreValue}!`;
+        }
+        
+        banner.classList.add('show');
+
+        // Automatically hide after 4.5 seconds
+        setTimeout(() => {
+            banner.classList.remove('show');
+        }, 4500);
+    }
+}
     function submitEventScores() {
         const eventSelect = document.getElementById('event-select');
         const scoreTypeSelect = document.getElementById('score-type');
@@ -711,7 +776,15 @@
             alert("Please select an event.");
             return;
         }
+// Example check inside your player saving loop:
+if (subscores && Object.keys(subscores).length > 0) {
+    for (const [subKey, subVal] of Object.entries(subscores)) {
+        checkAndDisplayHighScore(eventName, p, subVal, scoreType === 'high' ? 'High Score Wins' : 'Low Score Wins (Time/Penalty)', subKey);
+    }
+}
 
+// Check the overall total score as well
+checkAndDisplayHighScore(eventName, p, scoreVal, scoreType === 'high' ? 'High Score Wins' : 'Low Score Wins (Time/Penalty)');
         const results = [];
         let hasError = false;
 
