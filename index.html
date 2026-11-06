@@ -665,8 +665,9 @@
         function checkAndDisplayHighScore(eventName, athleteName, scoreValue, scoringMetric, subscoreName = null) {
             let pastScores = [];
 
+            // Scan historical completed events (excluding the one currently being edited if applicable)
             completedEvents.forEach((evt, idx) => {
-                if (editingIndex !== null && idx === editingIndex) return; // Skip current event if editing
+                if (editingIndex !== null && idx === editingIndex) return; 
                 if (evt.eventName === eventName && evt.results) {
                     evt.results.forEach(res => {
                         if (subscoreName) {
@@ -684,7 +685,7 @@
 
             let isNewRecord = false;
             if (pastScores.length === 0) {
-                isNewRecord = true;
+                isNewRecord = true; // First time record
             } else {
                 let currentBest = scoringMetric === 'High Score Wins' ? Math.max(...pastScores) : Math.min(...pastScores);
                 if (scoringMetric === 'High Score Wins' && scoreValue > currentBest) {
@@ -762,20 +763,6 @@
                 return;
             }
 
-            // --- CHECK HIGH SCORES AND SUBSCORES ---
-            const metricLabel = scoreType === 'high' ? 'High Score Wins' : 'Low Score Wins (Time/Penalty)';
-            results.forEach(res => {
-                if (res.subscores && Object.keys(res.subscores).length > 0) {
-                    for (const [subKey, subVal] of Object.entries(res.subscores)) {
-                        if (!isNaN(subVal)) {
-                            checkAndDisplayHighScore(eventName, res.name, subVal, metricLabel, subKey);
-                        }
-                    }
-                }
-                checkAndDisplayHighScore(eventName, res.name, res.score, metricLabel);
-            });
-            // ----------------------------------------
-
             if (scoreType === 'low') {
                 results.sort((a, b) => a.score - b.score);
             } else {
@@ -792,41 +779,42 @@
                 res.medal = res.rank === 1 ? "🥇" : (res.rank === 2 ? "🥈" : (res.rank === 3 ? "🥉" : ""));
             });
 
-           const eventRecord = {
-        eventName: eventName,
-        date: eventDate,
-        timestamp: new Date().toISOString(),
-        results: results
-    };
+            const eventRecord = {
+                eventName: eventName,
+                date: eventDate,
+                timestamp: new Date().toISOString(),
+                results: results
+            };
 
-    if (editingIndex !== null) {
-        completedEvents[editingIndex] = eventRecord;
-        editingIndex = null;
-    } else {
-        completedEvents.push(eventRecord);
-    }
-
-    // --- CHECK HIGH SCORES AND SUBSCORES NOW (AFTER SAVING TO COMPLETED EVENTS) ---
-    const metricLabel = scoreType === 'high' ? 'High Score Wins' : 'Low Score Wins (Time/Penalty)';
-    results.forEach(res => {
-        if (res.subscores && Object.keys(res.subscores).length > 0) {
-            for (const [subKey, subVal] of Object.entries(res.subscores)) {
-                if (!isNaN(subVal)) {
-                    checkAndDisplayHighScore(eventName, res.name, subVal, metricLabel, subKey);
+            // --- CHECK HIGH SCORES BEFORE PUSHING NEW RECORD TO COMPLETED EVENTS ---
+            const metricLabel = scoreType === 'high' ? 'High Score Wins' : 'Low Score Wins (Time/Penalty)';
+            results.forEach(res => {
+                if (res.subscores && Object.keys(res.subscores).length > 0) {
+                    for (const [subKey, subVal] of Object.entries(res.subscores)) {
+                        if (!isNaN(subVal)) {
+                            checkAndDisplayHighScore(eventName, res.name, subVal, metricLabel, subKey);
+                        }
+                    }
                 }
+                checkAndDisplayHighScore(eventName, res.name, res.score, metricLabel);
+            });
+            // ----------------------------------------------------------------------
+
+            if (editingIndex !== null) {
+                completedEvents[editingIndex] = eventRecord;
+                editingIndex = null;
+            } else {
+                completedEvents.push(eventRecord);
             }
+
+            syncLeagueToFirebase();
+            updatePlayerProfiles(eventRecord);
+            updateLeaderboard();
+            renderCompletedEvents();
+
+            if (eventSelect) eventSelect.value = '';
+            renderScoreInputs();
         }
-        checkAndDisplayHighScore(eventName, res.name, res.score, metricLabel);
-    });
-    // ------------------------------------------------------------------------------
-
-    syncLeagueToFirebase();
-    updatePlayerProfiles(eventRecord);
-    updateLeaderboard();
-    renderCompletedEvents();
-
-    if (eventSelect) eventSelect.value = '';
-    renderScoreInputs();
 
         function editEvent(index) {
             editingIndex = index;
