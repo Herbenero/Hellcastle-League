@@ -1,4 +1,234 @@
-<!-- Main Application Script -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 Hellcastle Archery Arena League</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --accent-color: #4CAF50;
+            --accent-hover: #45a049;
+            --danger-color: #e53935;
+            --danger-hover: #c62828;
+            --text-color: #ffffff;
+            --text-muted: #b0b0b0;
+            --border-color: #333333;
+            --input-bg: #2a2a2a;
+            --gold: #ffd700;
+            --silver: #c0c0c0;
+            --bronze: #cd7f32;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            background-image: linear-gradient(rgba(18, 18, 18, 0.85), rgba(18, 18, 18, 0.85)), url('Archery.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container { max-width: 900px; width: 100%; }
+        h1, h2, h3 { text-align: center; color: var(--gold); }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+        .form-row { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+        .form-group { flex: 1; min-width: 200px; display: flex; flex-direction: column; }
+        label { font-size: 0.9em; margin-bottom: 5px; color: var(--text-muted); }
+        input, select, button {
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1em;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--accent-color); }
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: var(--accent-hover); }
+        .btn-danger { background-color: var(--danger-color); }
+        .btn-danger:hover { background-color: var(--danger-hover); }
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .tag {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tag button { background: none; border: none; color: #ff5555; padding: 0; font-size: 1.1em; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background-color: var(--input-bg); color: var(--gold); }
+        tr:nth-child(1) td:first-child { color: var(--gold); font-weight: bold; }
+        tr:nth-child(2) td:first-child { color: var(--silver); font-weight: bold; }
+        tr:nth-child(3) td:first-child { color: var(--bronze); font-weight: bold; }
+        #current-league-header {
+            text-align: center;
+            font-size: 1.1em;
+            color: var(--accent-color);
+            margin-top: -10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+        #high-score-banner {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-50px);
+            background: linear-gradient(135deg, #7c3aed, #06b6d4);
+            color: #ffffff;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: bold;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        #high-score-banner.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="high-score-banner">
+        🏆 <span id="banner-text">New High Score Set!</span>
+    </div>
+
+    <div class="container">
+        <h1>🏆 Hellcastle Archery Arena League</h1>
+
+        <!-- 1. League & Setup Management -->
+        <div class="card">
+            <h2>1. Active League Setup</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="league-select">Continue Saved League</label>
+                    <select id="league-select" onchange="loadSelectedLeague()">
+                        <option value="">-- Select Existing League --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="league-name-input">Create New League Name</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="league-name-input" placeholder="e.g. HAAL #1" style="flex: 1;">
+                        <button id="set-league-btn" onclick="setActiveLeague()">Set League</button>
+                    </div>
+                </div>
+            </div>
+            <div id="current-league-header">
+                <span>Current Active League: <strong id="current-league-text">Hellcastle Archery League</strong></span>
+                <button class="btn-danger" style="padding: 4px 10px; font-size: 0.85em;" onclick="deleteCurrentLeague()">🗑️ Delete League</button>
+            </div>
+            <hr style="border-color: var(--border-color); margin: 20px 0;">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Add Combatant / Player Name</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="player-input" placeholder="Enter player name" style="flex: 1;">
+                        <button onclick="addPlayer()">Add</button>
+                    </div>
+                    <div id="player-tags" class="tags"></div>
+                </div>
+                <div class="form-group">
+                    <label>Add Event Name</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="event-input" placeholder="Enter event name" style="flex: 1;">
+                        <button onclick="addEvent()">Add</button>
+                    </div>
+                    <div id="event-tags" class="tags"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Event Scoring -->
+        <div class="card">
+            <h2>2. Enter Event Results</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="event-select">Select Event</label>
+                    <select id="event-select" onchange="renderScoreInputs()">
+                        <option value="">-- Choose Event --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="score-type">Scoring Metric</label>
+                    <select id="score-type">
+                        <option value="high">High Score Wins</option>
+                        <option value="low">Low Score Wins (Time/Penalty)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="event-date">Event Date & Time</label>
+                    <input type="datetime-local" id="event-date">
+                </div>
+            </div>
+            <div id="score-inputs-container"></div>
+        </div>
+
+        <!-- 3. Leaderboard -->
+        <div class="card">
+            <h2>🏆 Standings Leaderboard</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Athlete</th>
+                        <th>Total Points</th>
+                        <th>Wins (W)</th>
+                        <th>Losses (L)</th>
+                        <th>Ties (T)</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    <!-- Standings populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 4. Completed Event Log -->
+        <div class="card">
+            <h2>📜 Event Log</h2>
+            <div id="completed-events-log"></div>
+        </div>
+    </div>
+
+    <!-- Main Application Script -->
+    <!-- Main Application Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -958,3 +1188,5 @@
             await loadSelectedLeague();
         });
     </script>
+</body>
+</html>
