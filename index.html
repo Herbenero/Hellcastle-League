@@ -716,7 +716,7 @@
             }
         }
 
-        function submitEventScores() {
+       function submitEventScores() {
             const eventSelect = document.getElementById('event-select');
             const scoreTypeSelect = document.getElementById('score-type');
             const dateInput = document.getElementById('event-date');
@@ -766,20 +766,6 @@
                 return;
             }
 
-            // --- CHECK HIGH SCORES BEFORE PUSHING TO COMPLETED EVENTS ---
-            const metricLabel = scoreType === 'high' ? 'High Score Wins' : 'Low Score Wins (Time/Penalty)';
-            results.forEach(res => {
-                if (res.subscores && Object.keys(res.subscores).length > 0) {
-                    for (const [subKey, subVal] of Object.entries(res.subscores)) {
-                        if (!isNaN(subVal)) {
-                            checkAndDisplayHighScore(eventName, res.name, subVal, metricLabel, subKey);
-                        }
-                    }
-                }
-                checkAndDisplayHighScore(eventName, res.name, res.score, metricLabel);
-            });
-            // -----------------------------------------------------------
-
             if (scoreType === 'low') {
                 results.sort((a, b) => a.score - b.score);
             } else {
@@ -795,6 +781,22 @@
                 res.points = pointsMap[res.rank] || 10;
                 res.medal = res.rank === 1 ? "🥇" : (res.rank === 2 ? "🥈" : (res.rank === 3 ? "🥉" : ""));
             });
+
+            // --- CHECK HIGH SCORES AGAINST EXISTING COMPLETED EVENTS FIRST ---
+            const metricLabel = scoreType === 'high' ? 'High Score Wins' : 'Low Score Wins (Time/Penalty)';
+            results.forEach(res => {
+                // Check individual subscores if present
+                if (res.subscores && Object.keys(res.subscores).length > 0) {
+                    for (const [subKey, subVal] of Object.entries(res.subscores)) {
+                        if (!isNaN(subVal)) {
+                            checkAndDisplayHighScore(eventName, res.name, subVal, metricLabel, subKey);
+                        }
+                    }
+                }
+                // Check overall match score
+                checkAndDisplayHighScore(eventName, res.name, res.score, metricLabel);
+            });
+            // -----------------------------------------------------------------
 
             const eventRecord = {
                 eventName: eventName,
@@ -818,7 +820,6 @@
             if (eventSelect) eventSelect.value = '';
             renderScoreInputs();
         }
-
         function editEvent(index) {
             editingIndex = index;
             const evt = completedEvents[index];
