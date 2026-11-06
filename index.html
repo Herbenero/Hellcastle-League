@@ -664,58 +664,60 @@
         };
 
         function checkAndDisplayHighScore(eventName, athleteName, scoreValue, scoringMetric, subscoreName = null) {
-            let pastScores = [];
+    let pastScores = [];
 
-            completedEvents.forEach((evt, idx) => {
-                if (editingIndex !== null && idx === editingIndex) return; 
-                if (evt.eventName === eventName && evt.results) {
-                    evt.results.forEach(res => {
-                        if (subscoreName) {
-                            if (res.subscores && res.subscores[subscoreName] !== undefined && !isNaN(res.subscores[subscoreName])) {
-                                pastScores.push(Number(res.subscores[subscoreName]));
-                            }
-                        } else {
-                            if (res.score !== undefined && !isNaN(res.score)) {
-                                pastScores.push(Number(res.score));
-                            }
-                        }
-                    });
+    completedEvents.forEach((evt, idx) => {
+        if (editingIndex !== null && idx === editingIndex) return; 
+        if (evt.eventName === eventName && evt.results) {
+            evt.results.forEach(res => {
+                if (subscoreName) {
+                    if (res.subscores && res.subscores[subscoreName] !== undefined && !isNaN(res.subscores[subscoreName])) {
+                        pastScores.push(Number(res.subscores[subscoreName]));
+                    }
+                } else {
+                    if (res.score !== undefined && !isNaN(res.score)) {
+                        pastScores.push(Number(res.score));
+                    }
                 }
             });
-
-            let isNewRecord = false;
-            if (pastScores.length === 0) {
-                isNewRecord = true; // First time record in log
-            } else {
-                let currentBest = scoringMetric === 'High Score Wins' ? Math.max(...pastScores) : Math.min(...pastScores);
-                if (scoringMetric === 'High Score Wins' && scoreValue > currentBest) {
-                    isNewRecord = true;
-                } else if (scoringMetric === 'Low Score Wins (Time/Penalty)' && scoreValue < currentBest) {
-                    isNewRecord = true;
-                }
-            }
-
-            if (isNewRecord) {
-                const banner = document.getElementById('high-score-banner');
-                const bannerText = document.getElementById('banner-text');
-                
-                if (banner && bannerText) {
-                    if (subscoreName) {
-                        bannerText.textContent = `🎯 New Subscore Record! ${athleteName} set a record in ${subscoreName} (${eventName}): ${scoreValue}!`;
-                    } else {
-                        bannerText.textContent = `🌟 New Match Record! ${athleteName} set a new high score for ${eventName}: ${scoreValue}!`;
-                    }
-                    
-                    banner.classList.add('show');
-
-                    // Reset and hide after 4.5 seconds
-                    setTimeout(() => {
-                        banner.classList.remove('show');
-                    }, 4500);
-                }
-            }
         }
+    });
 
+    let isNewRecord = false;
+    if (pastScores.length === 0) {
+        // Decide whether to show banner on the very first entry for this event:
+        // Set to true if you want a banner when establishing the inaugural record!
+        isNewRecord = true; 
+    } else {
+        let currentBest = scoringMetric === 'High Score Wins' ? Math.max(...pastScores) : Math.min(...pastScores);
+        if (scoringMetric === 'High Score Wins' && scoreValue > currentBest) {
+            isNewRecord = true;
+        } else if (scoringMetric === 'Low Score Wins (Time/Penalty)' && scoreValue < currentBest) {
+            isNewRecord = true;
+        }
+    }
+
+    console.log(`Checking Record for ${eventName} (${subscoreName || 'Total'}): Value=${scoreValue}, Best=${pastScores}, NewRecord=${isNewRecord}`);
+
+    if (isNewRecord) {
+        const banner = document.getElementById('high-score-banner');
+        const bannerText = document.getElementById('banner-text');
+        
+        if (banner && bannerText) {
+            if (subscoreName) {
+                bannerText.textContent = `🎯 New Subscore Record! ${athleteName} set a record in ${subscoreName} (${eventName}): ${scoreValue}!`;
+            } else {
+                bannerText.textContent = `🌟 New Match Record! ${athleteName} set a new high score for ${eventName}: ${scoreValue}!`;
+            }
+            
+            banner.classList.add('show');
+
+            setTimeout(() => {
+                banner.classList.remove('show');
+            }, 4500);
+        }
+    }
+}
        function submitEventScores() {
             const eventSelect = document.getElementById('event-select');
             const scoreTypeSelect = document.getElementById('score-type');
