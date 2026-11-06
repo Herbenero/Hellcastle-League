@@ -792,28 +792,41 @@
                 res.medal = res.rank === 1 ? "🥇" : (res.rank === 2 ? "🥈" : (res.rank === 3 ? "🥉" : ""));
             });
 
-            const eventRecord = {
-                eventName: eventName,
-                date: eventDate,
-                timestamp: new Date().toISOString(),
-                results: results
-            };
+           const eventRecord = {
+        eventName: eventName,
+        date: eventDate,
+        timestamp: new Date().toISOString(),
+        results: results
+    };
 
-            if (editingIndex !== null) {
-                completedEvents[editingIndex] = eventRecord;
-                editingIndex = null;
-            } else {
-                completedEvents.push(eventRecord);
+    if (editingIndex !== null) {
+        completedEvents[editingIndex] = eventRecord;
+        editingIndex = null;
+    } else {
+        completedEvents.push(eventRecord);
+    }
+
+    // --- CHECK HIGH SCORES AND SUBSCORES NOW (AFTER SAVING TO COMPLETED EVENTS) ---
+    const metricLabel = scoreType === 'high' ? 'High Score Wins' : 'Low Score Wins (Time/Penalty)';
+    results.forEach(res => {
+        if (res.subscores && Object.keys(res.subscores).length > 0) {
+            for (const [subKey, subVal] of Object.entries(res.subscores)) {
+                if (!isNaN(subVal)) {
+                    checkAndDisplayHighScore(eventName, res.name, subVal, metricLabel, subKey);
+                }
             }
-
-            syncLeagueToFirebase();
-            updatePlayerProfiles(eventRecord);
-            updateLeaderboard();
-            renderCompletedEvents();
-
-            if (eventSelect) eventSelect.value = '';
-            renderScoreInputs();
         }
+        checkAndDisplayHighScore(eventName, res.name, res.score, metricLabel);
+    });
+    // ------------------------------------------------------------------------------
+
+    syncLeagueToFirebase();
+    updatePlayerProfiles(eventRecord);
+    updateLeaderboard();
+    renderCompletedEvents();
+
+    if (eventSelect) eventSelect.value = '';
+    renderScoreInputs();
 
         function editEvent(index) {
             editingIndex = index;
