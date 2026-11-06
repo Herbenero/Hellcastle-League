@@ -800,7 +800,7 @@
             });
             // -----------------------------------------------------------------
 
-            const eventRecord = {
+           const eventRecord = {
                 eventName: eventName,
                 date: eventDate,
                 timestamp: new Date().toISOString(),
@@ -814,6 +814,20 @@
                 completedEvents.push(eventRecord);
             }
 
+            // --- CHECK HIGH SCORES NOW (AFTER SAVING TO COMPLETED EVENTS) ---
+            const metricLabel = scoreType === 'high' ? 'High Score Wins' : 'Low Score Wins (Time/Penalty)';
+            results.forEach(res => {
+                if (res.subscores && Object.keys(res.subscores).length > 0) {
+                    for (const [subKey, subVal] of Object.entries(res.subscores)) {
+                        if (!isNaN(subVal)) {
+                            checkAndDisplayHighScore(eventName, res.name, subVal, metricLabel, subKey);
+                        }
+                    }
+                }
+                checkAndDisplayHighScore(eventName, res.name, res.score, metricLabel);
+            });
+            // ------------------------------------------------------------------------------
+
             syncLeagueToFirebase();
             updatePlayerProfiles(eventRecord);
             updateLeaderboard();
@@ -821,7 +835,6 @@
 
             if (eventSelect) eventSelect.value = '';
             renderScoreInputs();
-        }
         function editEvent(index) {
             editingIndex = index;
             const evt = completedEvents[index];
