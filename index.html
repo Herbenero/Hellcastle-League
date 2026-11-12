@@ -211,12 +211,12 @@
         <div class="card">
             <h2>1. Active League Setup</h2>
             <div class="form-row">
-                <div class="form-group">
-                    <label for="league-select">Continue Saved League</label>
-                    <select id="league-select" onchange="loadSelectedLeague()">
-                        <option value="">-- Select Existing League --</option>
-                    </select>
-                </div>
+               <div class="form-group">
+    <label for="league-select">Continue Saved League</label>
+    <select id="league-select" onchange="loadSelectedLeague()">
+        <option value="">-- Select Existing League --</option>
+    </select>
+</div>
                 <div class="form-group">
                     <label for="league-name-input">Create New League Name</label>
                     <div style="display: flex; gap: 8px;">
@@ -566,34 +566,43 @@ function showLeagueRecords() {
             }
         }
 
-        async function fetchSavedLeagues() {
-            const select = document.getElementById('league-select');
-            if (!select) return;
-            select.innerHTML = '<option value="">-- Select Existing League --</option>';
-            const seenLeagues = new Set();
-            try {
-                const querySnapshot = await getDocs(collection(db, "leagues"));
-                querySnapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    const name = data.leagueName || docSnap.id;
-                    if (name) {
-                        const normalized = name.trim().toLowerCase();
-                        if (!seenLeagues.has(normalized)) {
-                            seenLeagues.add(normalized);
-                            const opt = document.createElement('option');
-                            opt.value = name;
-                            opt.textContent = name;
-                            if (name.toLowerCase() === currentLeagueName.toLowerCase()) {
-                                opt.selected = true;
-                            }
-                            select.appendChild(opt);
-                        }
+       async function fetchSavedLeagues() {
+    const select = document.getElementById('league-select');
+    if (!select) return;
+    
+    // Keep only the default placeholder
+    select.innerHTML = '<option value="">-- Select Existing League --</option>';
+    
+    const seenLeagues = new Set();
+    
+    try {
+        const querySnapshot = await getDocs(collection(db, "leagues"));
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const name = data.leagueName || docSnap.id;
+            
+            if (name) {
+                // Normalize by trimming and lowercasing to catch duplicates like "Royal Couple" vs "royal couple"
+                const normalized = name.trim().toLowerCase();
+                
+                if (!seenLeagues.has(normalized)) {
+                    seenLeagues.add(normalized);
+                    
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    
+                    if (name.toLowerCase() === currentLeagueName.toLowerCase()) {
+                        opt.selected = true;
                     }
-                });
-            } catch (err) {
-                console.error("Error fetching leagues:", err);
+                    select.appendChild(opt);
+                }
             }
-        }
+        });
+    } catch (err) {
+        console.error("Error fetching leagues:", err);
+    }
+}
 
         async function setActiveLeague() {
             const input = document.getElementById('league-name-input');
