@@ -325,6 +325,39 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        window.addEventListener("DOMContentLoaded", () => {
+    const pendingData = localStorage.getItem("haalis_pending_match");
+    if (!pendingData) return;
+
+    try {
+        const match = JSON.parse(pendingData);
+        
+        // 1. Automatically select the matching event dropdown (e.g., Count Up)
+        const eventSelect = document.querySelector("#selectEventDropdown"); // Match your event dropdown ID
+        if (eventSelect) {
+            eventSelect.value = match.event;
+            eventSelect.dispatchEvent(new Event("change"));
+        }
+
+        // 2. Loop through players and fill their respective score input fields
+        match.players.forEach(player => {
+            // Find input field for this player (adjust selector based on your league form markup)
+            const scoreInput = document.querySelector(`input[data-player="${player.name}"]`) || 
+                               document.querySelector(`input[name="${player.name.toLowerCase()}Score"]`);
+            if (scoreInput) {
+                scoreInput.value = player.score;
+                scoreInput.dispatchEvent(new Event("input"));
+            }
+        });
+
+        // Clean up localStorage so it doesn't re-trigger on accidental page refreshes
+        localStorage.removeItem("haalis_pending_match");
+        
+        console.log("Successfully auto-filled pending match from Count Up!");
+    } catch (e) {
+        console.error("Error auto-filling pending league match:", e);
+    }
+});
 
         // Application State
         let currentLeagueName = "Hellcastle Archery League";
