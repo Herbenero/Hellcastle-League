@@ -1382,6 +1382,71 @@ function showLeagueRecords() {
             await fetchSavedLeagues();
             await loadSelectedLeague();
         });
+        // Initialization
+window.addEventListener('DOMContentLoaded', async () => {
+    setNowDate();
+    await fetchSavedLeagues();
+    await loadSelectedLeague();
+});
+
+// ==========================================
+// PASTE STEP 2 (COUNT UP BRIDGE) RIGHT HERE:
+// ==========================================
+window.addEventListener("DOMContentLoaded", async () => {
+    // Check if pending match data was passed from Count Up via localStorage
+    const pendingData = localStorage.getItem("haalis_pending_match");
+    if (!pendingData) return;
+
+    try {
+        const match = JSON.parse(pendingData);
+        
+        // 1. If a specific target league was passed, select and load it first
+        if (match.leagueName) {
+            const leagueSelect = document.getElementById("select-league-dropdown"); // or your league select ID
+            if (leagueSelect) {
+                leagueSelect.value = match.leagueName;
+                leagueSelect.dispatchEvent(new Event("change"));
+                if (typeof loadSelectedLeague === "function") {
+                    await loadSelectedLeague();
+                }
+            }
+        }
+
+        // 2. Select the event in the dropdown and trigger change so inputs render
+        const eventSelect = document.getElementById("event-select");
+        if (eventSelect) {
+            eventSelect.value = match.event;
+            eventSelect.dispatchEvent(new Event("change"));
+        }
+
+        // 3. Wait briefly for DOM inputs to render, then fill scores & remarks
+        setTimeout(() => {
+            match.players.forEach(player => {
+                const scoreInput = document.querySelector(`.player-score-field[data-player="${player.name}"]`);
+                if (scoreInput) {
+                    scoreInput.value = player.score;
+                    scoreInput.dispatchEvent(new Event("input"));
+                }
+
+                const notesInput = document.querySelector(`.player-notes-field[data-player="${player.name}"]`);
+                if (notesInput && player.ppr) {
+                    notesInput.value = `PPR: ${player.ppr}`;
+                    notesInput.dispatchEvent(new Event("input"));
+                }
+            });
+
+            // Clear localStorage so it doesn't re-trigger on subsequent refreshes
+            localStorage.removeItem("haalis_pending_match");
+            console.log("Successfully auto-filled pending match from Count Up!");
+        }, 200);
+
+    } catch (e) {
+        console.error("Error auto-filling pending league match:", e);
+    }
+});
+</script>
+</body>
+</html>
     </script>
 </body>
 </html>
