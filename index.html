@@ -573,26 +573,27 @@ function showLeagueRecords() {
     // Keep only the default placeholder
     select.innerHTML = '<option value="">-- Select Existing League --</option>';
     
-    const seenLeagues = new Set();
+    const seenNormalizedNames = new Set();
     
     try {
         const querySnapshot = await getDocs(collection(db, "leagues"));
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            const name = data.leagueName || docSnap.id;
+            const rawName = data.leagueName || docSnap.id;
             
-            if (name) {
-                // Normalize by trimming and lowercasing to catch duplicates like "Royal Couple" vs "royal couple"
-                const normalized = name.trim().toLowerCase();
+            if (rawName) {
+                // Format nicely (e.g. capitalize words or keep original) and normalize for comparison
+                const cleanName = rawName.trim();
+                const normalizedKey = cleanName.toLowerCase().replace(/[^a-z0-9]/g, '');
                 
-                if (!seenLeagues.has(normalized)) {
-                    seenLeagues.add(normalized);
+                if (!seenNormalizedNames.has(normalizedKey)) {
+                    seenNormalizedNames.add(normalizedKey);
                     
                     const opt = document.createElement('option');
-                    opt.value = name;
-                    opt.textContent = name;
+                    opt.value = cleanName;
+                    opt.textContent = cleanName;
                     
-                    if (name.toLowerCase() === currentLeagueName.toLowerCase()) {
+                    if (cleanName.toLowerCase() === currentLeagueName.toLowerCase()) {
                         opt.selected = true;
                     }
                     select.appendChild(opt);
@@ -603,7 +604,6 @@ function showLeagueRecords() {
         console.error("Error fetching leagues:", err);
     }
 }
-
         async function setActiveLeague() {
             const input = document.getElementById('league-name-input');
             const name = input ? input.value.trim() : '';
