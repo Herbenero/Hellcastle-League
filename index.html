@@ -369,19 +369,14 @@ function showLeagueRecords() {
         alert("No completed events recorded in this league yet.");
         return;
     }
-    
+
     const gameRecords = {};
-    
     completedEvents.forEach(evt => {
         const gameName = evt.eventName || "Unknown Game";
         const lowerGameName = gameName.trim().toLowerCase();
         const eventDateRaw = evt.date || evt.timestamp || '';
-        const eventDateStr = eventDateRaw ? new Date(eventDateRaw).toLocaleDateString(undefined, { 
-            year: 'numeric', 
-            month: 'short', 
-            day: 'numeric' 
-        }) : '';
-
+        const eventDateStr = eventDateRaw ? new Date(eventDateRaw).toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric' }) : '';
+        
         // Check if this game tracks lowest score as best record
         const isLowScoreGame = (lowerGameName === "301" || lowerGameName === "golf");
 
@@ -435,19 +430,11 @@ function showLeagueRecords() {
                         if (subVal !== '' && !isNaN(subVal)) {
                             const numVal = Number(subVal);
                             if (!gameRecords[gameName].subscoreRecords[subKey]) {
-                                gameRecords[gameName].subscoreRecords[subKey] = { 
-                                    score: numVal, 
-                                    holders: [res.name], 
-                                    date: eventDateStr 
-                                };
+                                gameRecords[gameName].subscoreRecords[subKey] = { score: numVal, holders: [res.name], date: eventDateStr };
                             } else {
                                 const subRec = gameRecords[gameName].subscoreRecords[subKey];
                                 if (numVal > subRec.score) {
-                                    gameRecords[gameName].subscoreRecords[subKey] = { 
-                                        score: numVal, 
-                                        holders: [res.name], 
-                                        date: eventDateStr 
-                                    };
+                                    gameRecords[gameName].subscoreRecords[subKey] = { score: numVal, holders: [res.name], date: eventDateStr };
                                 } else if (numVal === subRec.score && !subRec.holders.includes(res.name)) {
                                     subRec.holders.push(res.name);
                                 }
@@ -460,7 +447,15 @@ function showLeagueRecords() {
     });
 
     let recordsHtml = '';
-    for (const [gameName, data] of Object.entries(gameRecords)) {
+    
+    // -------------------------------------------------------------
+    // SORT GAMES ALPHABETICALLY BY NAME BEFORE RENDERING
+    // -------------------------------------------------------------
+    const sortedGameEntries = Object.entries(gameRecords).sort(([aName], [bName]) => 
+        aName.localeCompare(bName, undefined, { sensitivity: 'accent' })
+    );
+
+    for (const [gameName, data] of sortedGameEntries) {
         let subscoresHtml = '';
         if (Object.keys(data.subscoreRecords).length > 0) {
             subscoresHtml = '<div style="margin-top: 6px; padding-left: 10px; border-left: 2px solid var(--accent-color); font-size: 0.9em; color: var(--text-muted);">';
