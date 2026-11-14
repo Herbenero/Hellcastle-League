@@ -1417,13 +1417,21 @@ window.addEventListener('DOMContentLoaded', async () => {
 
             // Wait briefly for renderScoreInputs() to build the DOM inputs, then fill scores & remarks
             setTimeout(() => {
-                if (match.players && Array.isArray(match.players)) {
-                    match.players.forEach(player => {
-                        const scoreInput = document.querySelector(`.player-score-field[data-player="${player.name}"]`);
-                        if (scoreInput) {
-                            scoreInput.value = player.score;
-                            scoreInput.dispatchEvent(new Event("input"));
-                        }
+                // Auto-fill subscores (e.g., Marks, Pushed, Received)
+            if (player.subscores && typeof player.subscores === 'object') {
+              Object.entries(player.subscores).forEach(([subKey, subVal]) => {
+                const subInput = document.querySelector(`input[data-player="${pName}"][placeholder="${subKey}"]`);
+                if (subInput && subVal !== undefined && subVal !== null) {
+                  subInput.value = subVal;
+                  subInput.dispatchEvent(new Event("input", { bubbles: true }));
+                  subInput.dispatchEvent(new Event("change", { bubbles: true }));
+                }
+              });
+              // Auto-recalculate the Shove a Penny total score
+              if (typeof calcShoveTotal === 'function') {
+                calcShoveTotal(pName);
+              }
+            }
                         const notesInput = document.querySelector(`.player-notes-field[data-player="${player.name}"]`);
                         if (notesInput && player.ppr) {
                             notesInput.value = `PPR: ${player.ppr}`;
