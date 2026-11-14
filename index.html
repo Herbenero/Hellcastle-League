@@ -1517,8 +1517,9 @@
       await processPendingMatch(pendingData);
     } else {
       // Fallback: check URL query parameters (?league=...&event=...)
-      const urlParams = new URLSearchParams(window.location.search);
-      const paramLeague = urlParams.get('league');
+     const urlParams = new URLSearchParams(window.location.search);
+const matchParam = urlParams.get('match');
+const rawPending = matchParam || localStorage.getItem('haalis_pending_match');
       if (paramLeague) {
         const leagueSelect = document.getElementById('league-select');
         const matched = Array.from(leagueSelect.options).find(
