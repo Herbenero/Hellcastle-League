@@ -1411,18 +1411,17 @@ window.addEventListener("DOMContentLoaded", async () => {
 
         // 1. Select the target league in the dropdown
         if (match.leagueName) {
-            const leagueSelect = document.getElementById("league-select");
-            if (leagueSelect) {
-                // Ensure the option exists or set it directly
-                leagueSelect.value = match.leagueName;
-                if (leagueSelect.value !== match.leagueName) {
-                    // If not found in existing list, append it temporarily
-                    const opt = document.createElement("option");
-                    opt.value = match.leagueName;
-                    opt.textContent = match.leagueName;
-                    leagueSelect.appendChild(opt);
-                    leagueSelect.value = match.leagueName;
-                }
+           const leagueSelect = document.getElementById('your-league-select-id');
+
+// Clear existing options before adding fresh ones from Firestore
+leagueSelect.innerHTML = '<option value="">-- Select Existing League --</option>';
+
+querySnapshot.forEach((doc) => {
+  const option = document.createElement('option');
+  option.value = doc.id;
+  option.textContent = doc.data().leagueName || doc.id;
+  leagueSelect.appendChild(option);
+});
                 // Trigger league loading
                 if (typeof loadSelectedLeague === "function") {
                     await loadSelectedLeague();
