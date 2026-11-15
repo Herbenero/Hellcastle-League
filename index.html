@@ -287,6 +287,8 @@
     try {
       await setDoc(leagueRef, {
         leagueName: currentLeagueName,
+        players: players,
+        events: events,
         lastUpdated: serverTimestamp(),
         completedEvents: completedEvents
       }, { merge: true });
@@ -546,10 +548,14 @@
     if (input) input.value = '';
   }
 
-  async function loadSelectedLeague() {
+  async function loadSelectedLeague(leagueParamName) {
     const select = document.getElementById('league-select');
-    const leagueName = select.value;
+    const leagueName = leagueParamName || select.value;
     if (!leagueName) return;
+
+    if (select && select.value !== leagueName) {
+      select.value = leagueName;
+    }
 
     currentLeagueName = leagueName;
     document.getElementById('current-league-text').textContent = currentLeagueName;
@@ -579,17 +585,19 @@
 
         if (data.completedEvents) {
           completedEvents.push(...data.completedEvents);
-          data.completedEvents.forEach(evt => {
-            if (evt.eventName && !events.includes(evt.eventName)) {
-              events.push(evt.eventName);
-            }
-            evt.results.forEach(res => {
-              if (res.name && !players.includes(res.name)) {
-                players.push(res.name);
-              }
-            });
-          });
         }
+
+        // Restore saved player list, fallback or append from match history
+        const savedPlayers = Array.isArray(data.players) ? data.players : [];
+        const historyPlayers = completedEvents.flatMap(e => (e.results || []).map(r => r.name));
+        const combinedPlayers = [...new Set([...savedPlayers, ...historyPlayers])];
+        players.push(...combinedPlayers);
+
+        // Restore saved event list, fallback or append from match history
+        const savedEvents = Array.isArray(data.events) ? data.events : [];
+        const historyEvents = completedEvents.map(e => e.eventName).filter(Boolean);
+        const combinedEvents = [...new Set([...savedEvents, ...historyEvents])];
+        events.push(...combinedEvents);
 
         renderSetupUI();
         updateLeaderboard();
@@ -628,39 +636,43 @@
     }
   }
 
-  function addPlayer() {
+  async function addPlayer() {
     const input = document.getElementById('player-input');
     const name = input.value.trim();
     if (name && !players.includes(name)) {
       players.push(name);
       input.value = '';
       renderSetupUI();
+      await syncLeagueToFirebase();
     }
   }
 
-  function removePlayer(name) {
+  async function removePlayer(name) {
     const idx = players.indexOf(name);
     if (idx > -1) {
       players.splice(idx, 1);
       renderSetupUI();
+      await syncLeagueToFirebase();
     }
   }
 
-  function addEvent() {
+  async function addEvent() {
     const input = document.getElementById('event-input');
     const name = input.value.trim();
     if (name && !events.includes(name)) {
       events.push(name);
       input.value = '';
       renderSetupUI();
+      await syncLeagueToFirebase();
     }
   }
 
-  function removeEvent(name) {
+  async function removeEvent(name) {
     const idx = events.indexOf(name);
     if (idx > -1) {
       events.splice(idx, 1);
       renderSetupUI();
+      await syncLeagueToFirebase();
     }
   }
 
@@ -1346,14 +1358,12 @@
     }
   }
 
-  // --- Updated Unified DOM/Storage Initialization & Auto-Fill Processor ---
+  // --- Auto-Fill Processor ---
   async function processPendingMatch(rawJsonString) {
     if (!rawJsonString) return false;
     try {
       const match = JSON.parse(rawJsonString);
-      console.log("Processing incoming match payload:", match);
 
-      // 1. Select the target league in the dropdown
       if (match.leagueName) {
         const leagueSelect = document.getElementById('league-select');
         if (leagueSelect) {
@@ -1370,11 +1380,10 @@
             leagueSelect.appendChild(newOpt);
             leagueSelect.value = newOpt.value;
           }
-          await loadSelectedLeague();
+          await loadSelectedLeague(leagueSelect.value);
         }
       }
 
-      // 2. Ensure all incoming players exist in the league setup list
       let setupChanged = false;
       if (match.players && Array.isArray(match.players)) {
         match.players.forEach(p => {
@@ -1386,7 +1395,6 @@
         });
       }
 
-      // 3. Ensure the incoming event exists in the league event list
       if (match.event) {
         const evtName = match.event.trim();
         if (evtName && !events.some(existing => existing.toLowerCase() === evtName.toLowerCase())) {
@@ -1399,7 +1407,6 @@
         renderSetupUI();
       }
 
-      // 4. Select the event in #event-select and render the score inputs
       const eventSelect = document.getElementById("event-select");
       if (eventSelect && match.event) {
         const evtLower = match.event.trim().toLowerCase();
@@ -1412,13 +1419,11 @@
         renderScoreInputs();
       }
 
-      // 5. Populate subscores, total scores, and notes for every player
       setTimeout(() => {
         if (match.players && Array.isArray(match.players)) {
           match.players.forEach(player => {
             const pName = (player.name || '').trim();
 
-            // Auto-fill subscores (e.g., Marks, Pushed, Received)
             if (player.subscores && typeof player.subscores === 'object') {
               Object.entries(player.subscores).forEach(([subKey, subVal]) => {
                 const subInput = document.querySelector(`input[data-player="${pName}"][placeholder="${subKey}"]`);
@@ -1433,14 +1438,12 @@
               }
             }
 
-            // Auto-fill main score field
             const scoreInput = document.querySelector(`.player-score-field[data-player="${pName}"]`);
             if (scoreInput && player.score !== undefined && player.score !== null) {
               scoreInput.value = player.score;
               scoreInput.dispatchEvent(new Event("input", { bubbles: true }));
             }
 
-            // Auto-fill notes / PPR if provided
             const notesInput = document.querySelector(`.player-notes-field[data-player="${pName}"]`);
             if (notesInput) {
               if (player.notes) {
@@ -1453,14 +1456,12 @@
           });
         }
 
-        // Scroll smoothly to the Event Scoring section for user verification
         const eventCard = document.getElementById('score-inputs-container');
         if (eventCard) {
           eventCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         localStorage.removeItem("haalis_pending_match");
-        console.log("Successfully auto-filled pending match scores and subscores!");
       }, 200);
 
       return true;
@@ -1483,7 +1484,7 @@
     setNowDate();
 
     // Bind static UI buttons
-    document.getElementById('league-select').addEventListener('change', loadSelectedLeague);
+    document.getElementById('league-select').addEventListener('change', (e) => loadSelectedLeague(e.target.value));
     document.getElementById('set-league-btn').addEventListener('click', setActiveLeague);
     document.getElementById('records-btn').addEventListener('click', showLeagueRecords);
     document.getElementById('delete-league-btn').addEventListener('click', deleteCurrentLeague);
@@ -1511,23 +1512,33 @@
     // 1. Fetch saved leagues first
     await fetchSavedLeagues();
 
-    // 2. Check localStorage for incoming match payload
-    const pendingData = localStorage.getItem("haalis_pending_match");
-    if (pendingData) {
-      await processPendingMatch(pendingData);
-    } else {
-      // Fallback: check URL query parameters (?league=...&event=...)
-     const urlParams = new URLSearchParams(window.location.search);
-const matchParam = urlParams.get('match');
-const rawPending = matchParam || localStorage.getItem('haalis_pending_match');
-      if (paramLeague) {
-        const leagueSelect = document.getElementById('league-select');
-        const matched = Array.from(leagueSelect.options).find(
-          opt => opt.value.trim().toLowerCase() === paramLeague.trim().toLowerCase()
-        );
-        if (matched) leagueSelect.value = matched.value;
+    // 2. Check URL or localStorage parameters cleanly
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramLeague = urlParams.get('league');
+    const matchParam = urlParams.get('match');
+    const rawPending = matchParam || localStorage.getItem('haalis_pending_match');
+
+    if (paramLeague) {
+      const leagueSelect = document.getElementById('league-select');
+      const matched = Array.from(leagueSelect.options).find(
+        opt => opt.value.trim().toLowerCase() === paramLeague.trim().toLowerCase()
+      );
+      if (matched) {
+        leagueSelect.value = matched.value;
       }
-      await loadSelectedLeague();
+      await loadSelectedLeague(paramLeague);
+    } else {
+      const select = document.getElementById('league-select');
+      if (select && select.options.length > 1) {
+        select.value = select.options[1].value;
+        await loadSelectedLeague(select.value);
+      } else {
+        await loadSelectedLeague(currentLeagueName);
+      }
+    }
+
+    if (rawPending) {
+      await processPendingMatch(rawPending);
     }
   });
 </script>
