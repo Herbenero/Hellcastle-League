@@ -166,6 +166,21 @@
       </div>
     </div>
 
+    <!-- Player Profiles Section (Placed between active league & combatant entry) -->
+    <div style="background: #252525; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px 15px; margin-bottom: 20px;">
+      <div class="form-row" style="margin-bottom: 0; align-items: flex-end;">
+        <div class="form-group">
+          <label for="global-player-select" style="color: var(--gold); font-weight: bold;">👤 Player Profiles (All Leagues)</label>
+          <select id="global-player-select">
+            <option value="">-- Select Any Player to View Career Stats --</option>
+          </select>
+        </div>
+        <div>
+          <button id="view-player-profile-btn" type="button" style="background: #2196F3; height: 42px;">📊 View Stats</button>
+        </div>
+      </div>
+    </div>
+
     <hr style="border-color: var(--border-color); margin: 20px 0;">
 
     <div class="form-row">
@@ -293,8 +308,64 @@
         completedEvents: completedEvents
       }, { merge: true });
       await fetchSavedLeagues();
+      await fetchAllPlayers();
     } catch (error) {
       console.error("Error saving league to Firebase: ", error);
+    }
+  }
+
+  // --- Global Player Profiles Dropdown Logic ---
+  async function fetchAllPlayers() {
+    const select = document.getElementById('global-player-select');
+    if (!select) return;
+    
+    const currentVal = select.value;
+    select.innerHTML = '<option value="">-- Select Any Player to View Career Stats --</option>';
+    
+    const playerNames = new Set();
+    try {
+      const playersSnap = await getDocs(collection(db, "players"));
+      playersSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        const name = (data.name || docSnap.id || '').trim();
+        if (name) playerNames.add(name);
+      });
+
+      const leaguesSnap = await getDocs(collection(db, "leagues"));
+      leaguesSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (Array.isArray(data.players)) {
+          data.players.forEach(p => {
+            if (p && p.trim()) playerNames.add(p.trim());
+          });
+        }
+        if (Array.isArray(data.completedEvents)) {
+          data.completedEvents.forEach(evt => {
+            if (Array.isArray(evt.results)) {
+              evt.results.forEach(res => {
+                if (res.name && res.name.trim()) playerNames.add(res.name.trim());
+              });
+            }
+          });
+        }
+      });
+
+      const sortedNames = Array.from(playerNames).sort((a, b) => 
+        a.localeCompare(b, undefined, { sensitivity: 'base' })
+      );
+
+      sortedNames.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+
+      if (currentVal && playerNames.has(currentVal)) {
+        select.value = currentVal;
+      }
+    } catch (err) {
+      console.error("Error fetching global players:", err);
     }
   }
 
@@ -492,6 +563,7 @@
         console.error(`Error updating player profile for ${res.name}:`, err);
       }
     }
+    await fetchAllPlayers();
   }
 
   async function fetchSavedLeagues() {
@@ -587,13 +659,11 @@
           completedEvents.push(...data.completedEvents);
         }
 
-        // Restore saved player list, fallback or append from match history
         const savedPlayers = Array.isArray(data.players) ? data.players : [];
         const historyPlayers = completedEvents.flatMap(e => (e.results || []).map(r => r.name));
         const combinedPlayers = [...new Set([...savedPlayers, ...historyPlayers])];
         players.push(...combinedPlayers);
 
-        // Restore saved event list, fallback or append from match history
         const savedEvents = Array.isArray(data.events) ? data.events : [];
         const historyEvents = completedEvents.map(e => e.eventName).filter(Boolean);
         const combinedEvents = [...new Set([...savedEvents, ...historyEvents])];
@@ -630,6 +700,7 @@
       updateLeaderboard();
       renderCompletedEvents();
       await fetchSavedLeagues();
+      await fetchAllPlayers();
     } catch (err) {
       console.error("Error deleting league:", err);
       alert("Failed to delete league from database.");
@@ -644,6 +715,7 @@
       input.value = '';
       renderSetupUI();
       await syncLeagueToFirebase();
+      await fetchAllPlayers();
     }
   }
 
@@ -1203,67 +1275,85 @@
       const rawHistory = data.gameHistory || [];
       const seenMatches = new Map();
 
+      // Strict Deduplication across all leagues
       rawHistory.forEach(g => {
         const rawDate = g.date || g.timestamp || '';
-        const normalizedDate = rawDate ? rawDate.slice(0, 16) : '';
+        const timeKey = rawDate ? rawDate.slice(0, 16) : '';
         const normLeague = (g.league || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
         const normEvent = (g.event || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-        const matchKey = `${normLeague}_${normEvent}_${g.score}_${g.rank}_${normalizedDate}`;
+        const matchKey = g.matchId || `${normLeague}_${normEvent}_${g.score}_${g.rank}_${timeKey}`;
+        
         if (!seenMatches.has(matchKey)) {
           seenMatches.set(matchKey, g);
         }
       });
 
       const deduplicatedHistory = Array.from(seenMatches.values());
-      const leagueStats = {};
-      deduplicatedHistory.forEach(m => {
-        const leagueName = (m.league || 'General').trim();
-        const normKey = leagueName.toLowerCase().replace(/[^a-z0-9]/g, '');
-        if (!leagueStats[normKey]) {
-          leagueStats[normKey] = { displayName: leagueName, points: 0, games: 0 };
-        }
-        leagueStats[normKey].points += (m.points || 0);
-        leagueStats[normKey].games += 1;
-      });
 
-      const leagueRanks = [];
+      // 1. Calculate per-league records and points
+      const leagueStats = {};
       const leaguesSnapshot = await getDocs(collection(db, "leagues"));
+      
       leaguesSnapshot.forEach(lDoc => {
         const lData = lDoc.data();
         if (!lData.completedEvents) return;
+        const leagueDisplayName = lData.leagueName || lDoc.id;
+        const normLeagueKey = leagueDisplayName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
         const totals = {};
         lData.completedEvents.forEach(evt => {
           if (!evt.results) return;
+          const rankCounts = {};
           evt.results.forEach(res => {
-            totals[res.name] = (totals[res.name] || 0) + (res.points || 0);
+            rankCounts[res.rank] = (rankCounts[res.rank] || 0) + 1;
+          });
+
+          evt.results.forEach(res => {
+            if (!totals[res.name]) {
+              totals[res.name] = { points: 0, wins: 0, losses: 0, ties: 0, games: 0 };
+            }
+            totals[res.name].games++;
+            totals[res.name].points += (res.points || 0);
+            const isTie = rankCounts[res.rank] > 1;
+            if (isTie && res.rank === 1) {
+              totals[res.name].ties++;
+            } else if (res.rank === 1) {
+              totals[res.name].wins++;
+            } else {
+              totals[res.name].losses++;
+            }
           });
         });
 
         if (totals[pName] !== undefined) {
-          const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+          const sorted = Object.entries(totals).sort((a, b) => b[1].points - a[1].points);
           const rankIdx = sorted.findIndex(([name]) => name === pName);
-          const normKey = (lData.leagueName || lDoc.id).toLowerCase().replace(/[^a-z0-9]/g, '');
-          const stats = leagueStats[normKey] || { points: totals[pName], games: 0 };
-          if (rankIdx !== -1) {
-            leagueRanks.push({
-              displayName: lData.leagueName || lDoc.id,
-              rank: rankIdx + 1,
-              points: stats.points,
-              games: stats.games
-            });
-          }
+          const pStats = totals[pName];
+          leagueStats[normLeagueKey] = {
+            displayName: leagueDisplayName,
+            rank: rankIdx !== -1 ? rankIdx + 1 : '-',
+            points: pStats.points,
+            games: pStats.games,
+            wins: pStats.wins,
+            losses: pStats.losses,
+            ties: pStats.ties
+          };
         }
       });
 
-      const leagueRanksHtml = leagueRanks.length > 0 ? leagueRanks.map(l => `
-        <div style="background: var(--input-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); flex: 1; min-width: 140px;">
-          <div style="font-size: 0.85em; color: var(--text-muted);">${l.displayName}</div>
-          <div style="font-size: 1.1em; font-weight: bold; color: var(--gold);">
-            Rank #${l.rank} <span style="font-size: 0.85em; font-weight: normal; color: var(--text-color);">(${l.points} pts | ${l.games} games)</span>
+      const leagueRanksHtml = Object.keys(leagueStats).length > 0 ? Object.values(leagueStats).map(l => `
+        <div style="background: var(--input-bg); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--border-color); flex: 1; min-width: 200px;">
+          <div style="font-size: 0.9em; font-weight: bold; color: var(--gold); margin-bottom: 4px;">🏆 ${l.displayName}</div>
+          <div style="font-size: 0.9em; color: var(--text-color);">
+            Rank #${l.rank} &bull; <strong>${l.points}</strong> pts &bull; ${l.games} games
+          </div>
+          <div style="font-size: 0.85em; color: var(--text-muted); margin-top: 3px;">
+            Record: ${l.wins}W - ${l.losses}L - ${l.ties}T
           </div>
         </div>
       `).join('') : '<p style="color: var(--text-muted); font-size: 0.9em;">No active league standings.</p>';
 
+      // 2. Calculate per-event records & career totals
       const gameStats = {};
       let cleanLifetimePoints = 0;
       let cleanLifetimeWins = 0;
@@ -1271,7 +1361,7 @@
       let cleanLifetimeTies = 0;
 
       deduplicatedHistory.forEach(g => {
-        const gName = g.event;
+        const gName = g.event || 'Unknown Event';
         if (!gameStats[gName]) {
           gameStats[gName] = { wins: 0, losses: 0, ties: 0, totalPoints: 0, matches: [] };
         }
@@ -1291,6 +1381,9 @@
         cleanLifetimePoints += pts;
         gameStats[gName].matches.push(g);
       });
+
+      const totalDecisions = cleanLifetimeWins + cleanLifetimeLosses;
+      const winPct = totalDecisions > 0 ? ((cleanLifetimeWins / totalDecisions) * 100).toFixed(1) : '0.0';
 
       let gameAccordionHtml = Object.entries(gameStats).map(([gameName, stats], idx) => {
         const matchesHtml = stats.matches.map(m => {
@@ -1333,17 +1426,18 @@
 
       const modalHtml = `
         <div id="player-modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000;">
-          <div style="background: var(--card-bg); padding: 25px; border-radius: 8px; max-width: 580px; width: 90%; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative;">
+          <div style="background: var(--card-bg); padding: 25px; border-radius: 8px; max-width: 620px; width: 90%; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border-color); position: relative;">
             <button onclick="document.getElementById('player-modal-overlay').remove()" style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: white; font-size: 1.3em; cursor: pointer;">✖</button>
-            <h2 style="color: var(--gold); margin-top: 0; margin-bottom: 5px;">👤 ${data.name}'s Profile</h2>
-            <p style="margin-top: 0; color: var(--text-muted); font-size: 0.95em;">
-              <strong>Lifetime Points:</strong> ${cleanLifetimePoints} &nbsp;|&nbsp;
-              <strong>Career Record:</strong> ${cleanLifetimeWins}W - ${cleanLifetimeLosses}L - ${cleanLifetimeTies}T
+            <h2 style="color: var(--gold); margin-top: 0; margin-bottom: 5px;">👤 ${data.name}'s Career Profile</h2>
+            <p style="margin-top: 0; color: var(--text-muted); font-size: 0.95em; text-align: center; margin-bottom: 15px;">
+              <strong>Career Record:</strong> ${cleanLifetimeWins}W - ${cleanLifetimeLosses}L - ${cleanLifetimeTies}T &nbsp;|&nbsp; 
+              <strong>Win %:</strong> ${winPct}% &nbsp;|&nbsp; 
+              <strong>Lifetime Points:</strong> ${cleanLifetimePoints}
             </p>
-            <h3 style="color: var(--accent-color); font-size: 1em; margin-top: 18px; margin-bottom: 8px;">🏆 League Standings</h3>
+            <h3 style="color: var(--accent-color); font-size: 1em; margin-top: 15px; margin-bottom: 8px;">🏆 League Records & Standings</h3>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px;">${leagueRanksHtml}</div>
             <hr style="border-color: var(--border-color); margin: 15px 0;">
-            <h3 style="color: var(--accent-color); font-size: 1em; margin-bottom: 10px;">📊 Game Breakdown & Match History</h3>
+            <h3 style="color: var(--accent-color); font-size: 1em; margin-bottom: 10px;">📊 Event Records & Match History</h3>
             <div>${gameAccordionHtml || '<p style="color: var(--text-muted);">No recorded game history.</p>'}</div>
           </div>
         </div>
@@ -1489,6 +1583,22 @@
     document.getElementById('records-btn').addEventListener('click', showLeagueRecords);
     document.getElementById('delete-league-btn').addEventListener('click', deleteCurrentLeague);
 
+    // Global Player Profile Dropdown triggers
+    document.getElementById('view-player-profile-btn').addEventListener('click', () => {
+      const selectedPlayer = document.getElementById('global-player-select').value;
+      if (!selectedPlayer) {
+        alert("Please select a player from the dropdown first.");
+        return;
+      }
+      showPlayerProfile(selectedPlayer);
+    });
+
+    document.getElementById('global-player-select').addEventListener('change', (e) => {
+      if (e.target.value) {
+        showPlayerProfile(e.target.value);
+      }
+    });
+
     document.getElementById('add-player-btn').addEventListener('click', addPlayer);
     document.getElementById('player-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') addPlayer();
@@ -1505,12 +1615,14 @@
     window.addEventListener('storage', async (event) => {
       if (event.key === 'haalis_pending_match' && event.newValue) {
         await fetchSavedLeagues();
+        await fetchAllPlayers();
         await processPendingMatch(event.newValue);
       }
     });
 
-    // 1. Fetch saved leagues first
+    // 1. Fetch saved leagues and global players first
     await fetchSavedLeagues();
+    await fetchAllPlayers();
 
     // 2. Check URL or localStorage parameters cleanly
     const urlParams = new URLSearchParams(window.location.search);
