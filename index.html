@@ -166,6 +166,21 @@
       </div>
     </div>
 
+    <!-- Global Player Profiles Section -->
+    <div style="background: #252525; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px 15px; margin-bottom: 20px;">
+      <div class="form-row" style="margin-bottom: 0; align-items: flex-end;">
+        <div class="form-group">
+          <label for="global-player-select" style="color: var(--gold); font-weight: bold;">👤 Player Profiles (All Leagues)</label>
+          <select id="global-player-select">
+            <option value="">-- Select Any Player to View Career Stats --</option>
+          </select>
+        </div>
+        <div>
+          <button id="view-player-profile-btn" type="button" style="background: #2196F3; height: 42px;">📊 View Stats</button>
+        </div>
+      </div>
+    </div>
+
     <hr style="border-color: var(--border-color); margin: 20px 0;">
 
     <div class="form-row">
@@ -293,8 +308,66 @@
         completedEvents: completedEvents
       }, { merge: true });
       await fetchSavedLeagues();
+      await fetchAllPlayers();
     } catch (error) {
       console.error("Error saving league to Firebase: ", error);
+    }
+  }
+
+  // --- Global Player Profiles Dropdown Logic ---
+  async function fetchAllPlayers() {
+    const select = document.getElementById('global-player-select');
+    if (!select) return;
+    
+    const currentVal = select.value;
+    select.innerHTML = '<option value="">-- Select Any Player to View Career Stats --</option>';
+    
+    const playerNames = new Set();
+    try {
+      // 1. Pull all players with recorded profiles
+      const playersSnap = await getDocs(collection(db, "players"));
+      playersSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        const name = (data.name || docSnap.id || '').trim();
+        if (name) playerNames.add(name);
+      });
+
+      // 2. Also include any players saved in league rosters or match histories
+      const leaguesSnap = await getDocs(collection(db, "leagues"));
+      leaguesSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (Array.isArray(data.players)) {
+          data.players.forEach(p => {
+            if (p && p.trim()) playerNames.add(p.trim());
+          });
+        }
+        if (Array.isArray(data.completedEvents)) {
+          data.completedEvents.forEach(evt => {
+            if (Array.isArray(evt.results)) {
+              evt.results.forEach(res => {
+                if (res.name && res.name.trim()) playerNames.add(res.name.trim());
+              });
+            }
+          });
+        }
+      });
+
+      const sortedNames = Array.from(playerNames).sort((a, b) => 
+        a.localeCompare(b, undefined, { sensitivity: 'base' })
+      );
+
+      sortedNames.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+
+      if (currentVal && playerNames.has(currentVal)) {
+        select.value = currentVal;
+      }
+    } catch (err) {
+      console.error("Error fetching global players:", err);
     }
   }
 
@@ -492,6 +565,7 @@
         console.error(`Error updating player profile for ${res.name}:`, err);
       }
     }
+    await fetchAllPlayers();
   }
 
   async function fetchSavedLeagues() {
@@ -587,13 +661,11 @@
           completedEvents.push(...data.completedEvents);
         }
 
-        // Restore saved player list, fallback or append from match history
         const savedPlayers = Array.isArray(data.players) ? data.players : [];
         const historyPlayers = completedEvents.flatMap(e => (e.results || []).map(r => r.name));
         const combinedPlayers = [...new Set([...savedPlayers, ...historyPlayers])];
         players.push(...combinedPlayers);
 
-        // Restore saved event list, fallback or append from match history
         const savedEvents = Array.isArray(data.events) ? data.events : [];
         const historyEvents = completedEvents.map(e => e.eventName).filter(Boolean);
         const combinedEvents = [...new Set([...savedEvents, ...historyEvents])];
@@ -630,6 +702,7 @@
       updateLeaderboard();
       renderCompletedEvents();
       await fetchSavedLeagues();
+      await fetchAllPlayers();
     } catch (err) {
       console.error("Error deleting league:", err);
       alert("Failed to delete league from database.");
@@ -644,6 +717,7 @@
       input.value = '';
       renderSetupUI();
       await syncLeagueToFirebase();
+      await fetchAllPlayers();
     }
   }
 
@@ -1489,6 +1563,22 @@
     document.getElementById('records-btn').addEventListener('click', showLeagueRecords);
     document.getElementById('delete-league-btn').addEventListener('click', deleteCurrentLeague);
 
+    // Global Player Profile Dropdown triggers
+    document.getElementById('view-player-profile-btn').addEventListener('click', () => {
+      const selectedPlayer = document.getElementById('global-player-select').value;
+      if (!selectedPlayer) {
+        alert("Please select a player from the dropdown first.");
+        return;
+      }
+      showPlayerProfile(selectedPlayer);
+    });
+
+    document.getElementById('global-player-select').addEventListener('change', (e) => {
+      if (e.target.value) {
+        showPlayerProfile(e.target.value);
+      }
+    });
+
     document.getElementById('add-player-btn').addEventListener('click', addPlayer);
     document.getElementById('player-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') addPlayer();
@@ -1505,12 +1595,14 @@
     window.addEventListener('storage', async (event) => {
       if (event.key === 'haalis_pending_match' && event.newValue) {
         await fetchSavedLeagues();
+        await fetchAllPlayers();
         await processPendingMatch(event.newValue);
       }
     });
 
-    // 1. Fetch saved leagues first
+    // 1. Fetch saved leagues and global players first
     await fetchSavedLeagues();
+    await fetchAllPlayers();
 
     // 2. Check URL or localStorage parameters cleanly
     const urlParams = new URLSearchParams(window.location.search);
