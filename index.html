@@ -1273,16 +1273,20 @@
         return;
       }
 
-      const data = docSnap.data();
+     const data = docSnap.data();
       const rawHistory = data.gameHistory || [];
       const seenMatches = new Map();
 
       rawHistory.forEach(g => {
         const rawDate = g.date || g.timestamp || '';
-        const normalizedDate = rawDate ? rawDate.slice(0, 16) : '';
+        const normalizedDate = rawDate ? rawDate.trim() : '';
         const normLeague = (g.league || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
         const normEvent = (g.event || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-        const matchKey = `${normLeague}_${normEvent}_${g.score}_${g.rank}_${normalizedDate}`;
+        
+        // Use exact matchId if available, otherwise build a precise unique signature
+        const subscoreString = g.subscores ? JSON.stringify(g.subscores) : '';
+        const matchKey = g.matchId || `${normLeague}_${normEvent}_${g.score}_${g.rank}_${subscoreString}_${normalizedDate}`;
+        
         if (!seenMatches.has(matchKey)) {
           seenMatches.set(matchKey, g);
         }
