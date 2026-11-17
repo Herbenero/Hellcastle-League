@@ -1273,19 +1273,19 @@
         return;
       }
 
-     const data = docSnap.data();
+    const data = docSnap.data();
       const rawHistory = data.gameHistory || [];
       const seenMatches = new Map();
 
       rawHistory.forEach(g => {
         const rawDate = g.date || g.timestamp || '';
-        const normalizedDate = rawDate ? rawDate.trim() : '';
+        // Normalize timestamp down to the minute to catch duplicate pushes of the same match
+        const timeKey = rawDate ? rawDate.slice(0, 16) : '';
         const normLeague = (g.league || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
         const normEvent = (g.event || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
         
-        // Use exact matchId if available, otherwise build a precise unique signature
-        const subscoreString = g.subscores ? JSON.stringify(g.subscores) : '';
-        const matchKey = g.matchId || `${normLeague}_${normEvent}_${g.score}_${g.rank}_${subscoreString}_${normalizedDate}`;
+        // Strict composite key: League + Event + Score + Rank + Minute
+        const matchKey = g.matchId || `${normLeague}_${normEvent}_${g.score}_${g.rank}_${timeKey}`;
         
         if (!seenMatches.has(matchKey)) {
           seenMatches.set(matchKey, g);
